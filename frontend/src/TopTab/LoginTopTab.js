@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./TopTab.css"
-import LoginBox from "./LoginBox.js"
+import {LoginBox, ShowBox} from "./LoginBox.js"
 
 function LoginTopTab() {    
     let isSignedIn = true; // Change to true to test
@@ -27,7 +27,7 @@ function Login(){
                 Log in
             </div>
 
-            {showLoginDiv && (<LoginBox/>)}
+            {showLoginDiv && (<ShowBox/>)}
         </div>
     );
 }
