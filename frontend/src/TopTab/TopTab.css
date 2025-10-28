@@ -1,0 +1,23 @@
+.TopTab{
+  width: 100%;
+  background-color: #20232a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  font-size: 1.5rem;
+}
+
+.NavItem{
+  margin: 20px;
+}
+
+.TextButton{
+  color: white;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.TextButton:hover{
+  color: grey;
+}
