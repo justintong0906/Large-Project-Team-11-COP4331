@@ -1,0 +1,44 @@
+.LoginBox{
+    position: absolute;
+    right: 20%;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #20232a;
+    border: 2px solid #353a44;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    width: 300px;
+    border-radius: 12px;
+    text-align: center;
+    padding-bottom: 30px;
+}
+
+.lbContent{
+    color:white;
+    margin-bottom: 50px;
+}
+
+.textbox{ /*type-box, i got this style from "copy-paste-css.com" */
+    padding: 6px 12px;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    appearance: none;
+    border-radius: 4px;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    :focus{
+        color: #212529;
+        background-color: #fff;
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+    }   
+}
+
+.hlink{
+    color:#7584aa;
+}

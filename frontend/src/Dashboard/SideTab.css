@@ -1,0 +1,33 @@
+.SideTab{
+  flex-direction: column;
+  width: 200px;
+  height: 100vh;
+  position: absolute;
+  background-color: #929256;
+  color: white;
+  display: flex;
+  align-items: center;
+  /* justify-content: flex-start; */
+  font-size: 1.5rem;
+}
+
+.NavItem{
+  color: black;
+  font-weight:500;
+  margin: 25px;
+}
+
+.TextButton{
+  cursor: pointer;
+  transition: color .2s;
+  text-decoration: none;
+}
+
+.TextButton:hover{
+  color: grey;
+}
+
+.Logo{
+  width:  120px;
+  height: 120px;
+}
