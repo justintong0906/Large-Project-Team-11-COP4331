@@ -1,0 +1,31 @@
+.LoginGraphic{
+    position: absolute;
+    left: 15%;
+    top: 50%;
+    width: 400px;
+    height:350px;
+    transform: translateY(-50%);
+    background: rgba(121, 126, 50, 0.9);
+    border: 3px solid #8e917b;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 12px;
+    padding: 20px 30px;
+    text-align: left;
+}
+
+.LoginGraphicTitle{
+    font-family: 'Verdana', sans-serif;
+    font-weight:600;
+    font-size: 2.2rem;
+    color: #ffdf5e;
+    margin-bottom: 30px;
+}
+
+.LoginGraphicText{
+    font-family: 'Verdana', sans-serif;
+    font-weight:500;
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}

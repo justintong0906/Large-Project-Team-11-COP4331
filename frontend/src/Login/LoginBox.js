@@ -13,11 +13,12 @@ function ShowBox() {
 function LoginBox({setShowLogin}){
     return(
         <div className="LoginBox">
-            <h2 class="lbContent">Log in</h2>
+            <h2 class="lbContent" style={{fontSize:"2.2rem", marginTop: "0"}}>Log in</h2>
             <div class="lbContent">
-                <input class="textbox" placeholder="Email" style={{marginBottom:"10px"}}></input>
+                <input class="textbox" placeholder="Email" style={{marginBottom:"5px"}}></input>
                 <input class="textbox" placeholder="Password" type="password"></input>
             </div>
+            <button class="lbContent LoginButton">Log in</button>
             <div class="lbContent">
                 <p style={{fontSize: '18px', marginBottom: "2px"}}>Don't have an account? </p>
                 <a 
@@ -38,12 +39,13 @@ function LoginBox({setShowLogin}){
 function SignupBox({setShowLogin}){
     return(
         <div className="LoginBox">
-            <h2 class="lbContent">Sign up</h2>
+            <h2 class="lbContent" style={{fontSize:"2.2rem", marginTop: "0"}}>Sign up</h2>
             <div class = "lbContent">
-                <input class="textbox" placeholder="Email" style={{marginBottom:"10px"}}></input><br/>
-                <input class="textbox" placeholder="Password " type="password" style={{marginBottom:"10px"}}></input><br/>
+                <input class="textbox" placeholder="Email" style={{marginBottom:"5px"}}></input><br/>
+                <input class="textbox" placeholder="Password " type="password" style={{marginBottom:"5px"}}></input><br/>
                 <input class="textbox" placeholder="Confirm Password" type="password"></input>
             </div>
+            <button class="lbContent LoginButton">Sign up</button>
 
             <p class="lbContent" style={{fontSize: '18px', marginBottom: "0px"}}>Already have an account? </p>
             <a 

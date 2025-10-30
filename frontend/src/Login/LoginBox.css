@@ -1,9 +1,9 @@
 .LoginBox{
     position: absolute;
-    right: 15%;
+    right: 16%;
     top: 50%;
     transform: translateY(-50%);
-    background-color: #464739;
+    background-color: #eeeeee;
     border: 3px solid #393a30;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
@@ -14,8 +14,8 @@
 }
 
 .lbContent{
-    color:white;
-    margin-bottom: 50px;
+    color:black(0, 0, 0);
+    margin-bottom: 30px;
 }
 
 .textbox{ /*type-box, i got this style from "copy-paste-css.com" */
@@ -26,7 +26,7 @@
     color: #212529;
     background-color: #fff;
     background-clip: padding-box;
-    border: 1px solid #ced4da;
+    border: 1px solid #9c9c9c;
     appearance: none;
     border-radius: 4px;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
@@ -41,4 +41,29 @@
 
 .hlink{
     color:#7584aa;
+}
+
+.LoginButton{ /* from "https://copy-paste-css.com/" */
+    display: inline-block;
+    outline: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 500px;
+    transition-property: background-color,border-color,color,box-shadow,filter;
+    transition-duration: .3s;
+    border: 1px solid transparent;
+    letter-spacing: 2px;
+    min-width: 160px;
+    text-transform: uppercase;
+    white-space: normal;
+    font-weight: 700;
+    text-align: center;
+    padding: 16px 14px 18px;
+    color: #fff;
+    background-color: #396a92;
+    height: 48px; 
+}
+.LoginButton:hover{
+    background-color: #5688b1;
 }
