@@ -1,10 +1,15 @@
-import LoginSideTab from "./SideTab/LoginSideTab"
-import { ShowBox } from "./SideTab/LoginBox";
+import LoginSideTab from "./LoginSideTab"
+import { ShowBox } from "./LoginBox";
+import "./Login.css"
+import LoginLogo from "./LoginLogo";
 
-function LoginPage() {
+function Login() {
     return(
-        <ShowBox/>
+        <div class="Login">
+            <LoginLogo/>
+            <ShowBox/>
+        </div>
     )
 }
 
-export default LoginPage;
+export default Login;

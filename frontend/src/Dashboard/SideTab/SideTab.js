@@ -1,6 +1,6 @@
 import "./SideTab.css"
-import LoginSideTab from "../Login/SideTab/LoginSideTab.js"
-import logo from "../images/temp-logo-modified.png"
+import LoginSideTab from "../../Login/LoginSideTab.js"
+import logo from "../../images/temp-logo-modified.png"
 
 function SideTab() {
     

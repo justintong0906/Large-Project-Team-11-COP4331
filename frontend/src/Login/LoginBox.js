@@ -38,10 +38,13 @@ function LoginBox({setShowLogin}){
 function SignupBox({setShowLogin}){
     return(
         <div className="LoginBox">
-            <h3 class="lbContent">Sign up</h3><br/>
-            <input class="lbContent textbox" placeholder="Email"></input><br/>
-            <input class="lbContent textbox" placeholder="Password" type="password"></input><br/>
-            <input class="lbContent textbox" placeholder="Confirm Password" type="password"></input><br/>
+            <h2 class="lbContent">Sign up</h2>
+            <div class = "lbContent">
+                <input class="textbox" placeholder="Email" style={{marginBottom:"10px"}}></input><br/>
+                <input class="textbox" placeholder="Password " type="password" style={{marginBottom:"10px"}}></input><br/>
+                <input class="textbox" placeholder="Confirm Password" type="password"></input>
+            </div>
+
             <p class="lbContent" style={{fontSize: '18px', marginBottom: "0px"}}>Already have an account? </p>
             <a 
                 class="lbContent hlink TextButton"

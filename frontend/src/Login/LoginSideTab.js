@@ -1,9 +1,8 @@
 import { useState } from "react";
-import "../../Dashboard/SideTab.css"
-import {LoginBox, ShowBox} from "./LoginBox.js"
+import {ShowBox} from "./LoginBox.js"
 
 function LoginSideTab() {    
-    let isSignedIn = true; // Change to true to test
+    let isSignedIn = true; // Change to true to test: <Login />
 
     return(
         <div class="NavItem TextButton">

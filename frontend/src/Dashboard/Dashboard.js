@@ -1,8 +1,8 @@
-import SideTab from "./SideTab";
+import SideTab from "./SideTab/SideTab";
 
 function Dashboard() {
   return (
-  <div className="Dashboard" style={{backgroundColor:"#dbdbdbff", height: '100vh'}}>
+  <div className="Dashboard">
       <SideTab />
     </div>
   );
