@@ -2,17 +2,17 @@ import "./SideTab.css"
 import LoginSideTab from "../../Login/LoginSideTab.js"
 import logo from "../../images/temp-logo-modified.png"
 
-function SideTab() {
+function SideTab({ setVisible }) {
     
     return(
         <div className="SideTab">
             <a href="/">
                 <img className="Logo NavItem TextButton" src={logo} alt="Logo" />
             </a>
-            <a className="NavItem TextButton" href="/">Home</a>
-            <a className="NavItem TextButton">Friends</a>
-            <a className="NavItem TextButton">Profile</a>
-            <a className="NavItem TextButton">Settings</a>
+            <button className="NavItem TextButton" onClick={() => setVisible(0)}>Home</button>
+            <button className="NavItem TextButton" onClick={() => setVisible(1)}>Friends</button>
+            <button className="NavItem TextButton" onClick={() => setVisible(2)}>Profile</button>
+            <button className="NavItem TextButton" onClick={() => setVisible(3)}>Settings</button>
             <a className="NavItem TextButton" href="/login" style={{marginTop: 'auto'}}>Log Out</a>
             {/* <LoginSideTab/> */}
         </div>
