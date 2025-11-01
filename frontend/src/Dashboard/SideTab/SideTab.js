@@ -1,19 +1,20 @@
 import "./SideTab.css"
 import LoginSideTab from "../../Login/LoginSideTab.js"
 import logo from "../../images/temp-logo-modified.png"
+import { Link } from 'react-router-dom';
 
-function SideTab({ setVisible }) {
+function SideTab() {
     
     return(
         <div className="SideTab">
-            <a href="/">
+            <Link to="/">
                 <img className="Logo NavItem TextButton" src={logo} alt="Logo" />
-            </a>
-            <button className="NavItem TextButton" onClick={() => setVisible(0)}>Home</button>
-            <button className="NavItem TextButton" onClick={() => setVisible(1)}>Friends</button>
-            <button className="NavItem TextButton" onClick={() => setVisible(2)}>Profile</button>
-            <button className="NavItem TextButton" onClick={() => setVisible(3)}>Settings</button>
-            <a className="NavItem TextButton" href="/login" style={{marginTop: 'auto'}}>Log Out</a>
+            </Link>
+            <Link to="/" className="NavItem TextButton">Home</Link>
+            <Link to="/friends" className="NavItem TextButton">Friends</Link>
+            <Link to="/profile" className="NavItem TextButton">Profile</Link>
+            <Link to="/settings" className="NavItem TextButton">Settings</Link>
+            <Link to="/login" className="NavItem TextButton" style={{marginTop: 'auto'}}>Log Out</Link>
             {/* <LoginSideTab/> */}
         </div>
     )

@@ -1,4 +1,19 @@
 .CenterTab{
+  position: absolute;
+  left: 57%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1080px;
+  height: 600px;
+  background-color: #eeee;
+  border: 2px solid #393a30;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  overflow: auto;
+}
+
+/* .CenterTab{
   width: 80%;
   height: auto;
   position: absolute;
@@ -9,28 +24,7 @@
   align-items: center;
   justify-content: flex-start;
   font-size: 1.5rem;
-}
-
-.NavItem{
-  color: black;
-  font-weight:500;
-  margin: 25px;
-}
-
-.TextButton{
-  cursor: pointer;
-  transition: color .2s;
-  text-decoration: none;
-}
-
-.TextButton:hover{
-  color: grey;
-}
-
-.Logo{
-  width:  120px;
-  height: 120px;
-}
+} */
 
 .RemoveBTN{
   cursor: pointer;
