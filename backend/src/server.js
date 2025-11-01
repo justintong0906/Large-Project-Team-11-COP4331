@@ -4,12 +4,16 @@ import notesRoutes from "./routes/notesRoutes.js";
 import { connectDB } from "./config/db.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
+import cors from "cors";
 
 dotenv.config();
 console.log(process.env.MONGO_URI);
 
 const app = express();
 const port = process.env.PORT || 5001;
+
+app.use(express.json());
+app.use(cors());
 
 connectDB();
 

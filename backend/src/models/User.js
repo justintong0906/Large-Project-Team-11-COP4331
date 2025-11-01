@@ -4,7 +4,15 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
-    password: { type: String, required: true, minlength: 6 }
+    password: { type: String, required: true, minlength: 6 },
+    emailVerified: { type: Boolean, default: false },
+
+    // temporary on signup
+    emailVerifyTokenHash: { type: String, index: true },
+    emailVerifyTokenExpiresAt: { type: Date },
+
+
+
   },
   { timestamps: true }
 );
