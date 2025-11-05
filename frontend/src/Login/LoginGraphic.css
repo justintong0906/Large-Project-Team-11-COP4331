@@ -2,8 +2,8 @@
     position: absolute;
     left: 15%;
     top: 50%;
-    width: 400px;
-    height:350px;
+    width: 450px;
+    height:400px;
     transform: translateY(-50%);
     background: rgba(121, 126, 50, 0.9);
     border: 3px solid #8e917b;
