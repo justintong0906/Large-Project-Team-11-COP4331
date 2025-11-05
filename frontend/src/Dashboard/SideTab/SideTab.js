@@ -13,7 +13,6 @@ function SideTab() {
             <Link to="/" className="NavItem TextButton">Home</Link>
             <Link to="/friends" className="NavItem TextButton">Friends</Link>
             <Link to="/profile" className="NavItem TextButton">Profile</Link>
-            <Link to="/settings" className="NavItem TextButton">Settings</Link>
             <Link to="/login" className="NavItem TextButton" style={{marginTop: 'auto'}}>Log Out</Link>
             {/* <LoginSideTab/> */}
         </div>

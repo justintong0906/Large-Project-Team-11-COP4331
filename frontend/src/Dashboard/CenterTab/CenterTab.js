@@ -4,7 +4,6 @@ import { Routes, Route } from 'react-router-dom';
 import Home from "../Home/Home";
 import Friends from "../Friends/Friends";
 import Profile from "../Profile/Profile";
-import Settings from "../Settings/Settings";
 
 
 function CenterTab() {
@@ -15,7 +14,6 @@ function CenterTab() {
 				<Route path="/" element={<Home />} />
 				<Route path="/friends" element={<Friends />} />
 				<Route path="/profile" element={<Profile />} />
-				<Route path="/settings" element={<Settings />} />
 			</Routes>
 		</div>
 
