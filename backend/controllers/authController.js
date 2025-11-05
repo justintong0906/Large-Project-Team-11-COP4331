@@ -16,7 +16,7 @@ const signToken = (user) =>
 // POST /api/auth/signup
 export const signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body || {};
+    const { username, email, password, confirmpassword} = req.body || {};
 
     // Basic validation
     if (!username || !email || !password) {
@@ -28,6 +28,18 @@ export const signup = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Password must be at least 6 characters." });
+    }
+    
+    if(password !== confirmpassword){
+      return res
+        .status(400)
+        .json({ message: "Passwords do not match." });
+    }
+    console.log("email", email);
+    if (!email.includes("@ucf.edu") && !email.includes("@mail.valenciacollege.edu")) {
+      return res
+        .status(400)
+        .json({ message: "Invalid email. Must be @ucf or @mail.valenciacollege email." });
     }
 
     // Normalize input
