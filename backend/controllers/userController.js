@@ -50,9 +50,6 @@ export const getRandomUser = async (req, res) => {
   }
 };
 
-// controllers/userController.js
-import mongoose from "mongoose";
-import User from "../models/User.js";
 
 export const getRandomCompatibleUser = async (req, res) => {
   try {
