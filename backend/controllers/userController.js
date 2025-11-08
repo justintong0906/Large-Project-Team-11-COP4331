@@ -123,3 +123,88 @@ export const getRandomCompatibleUser = async (req, res) => {
 };
 
 
+// Maps defining bit positions
+const DAY_BITS = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+const TIME_BITS = { morning: 7, afternoon: 8, evening: 9 };
+const SPLIT_BITS = { arnold: 10, ppl: 11, brosplit: 12 };
+
+function toBitmask({ days = [], times = [], splits = [] }) {
+  let mask = 0;
+
+  const pushBits = (items, map) => {
+    for (const raw of items) {
+      if (!raw) continue;
+      const key = String(raw).trim().toLowerCase();
+      if (map[key] === undefined) continue;
+      mask |= (1 << map[key]);
+    }
+  };
+
+  pushBits(days, DAY_BITS);
+  pushBits(times, TIME_BITS);
+  pushBits(splits, SPLIT_BITS);
+  return mask >>> 0; // ensure unsigned
+}
+
+export const saveQuizResults = async (req, res) => {
+  try {
+    // Expect auth middleware to set req.userId (preferred).
+    // Fallback to :id param if you want to support admin updates.
+    const userId = req.userId ?? req.params.id;
+
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(401).json({ message: "Unauthorized or invalid user id." });
+    }
+
+    const { days, times, splits } = req.body ?? {};
+
+    // Validate payload shapes (arrays or undefined)
+    const isArrOrUndef = (v) => v === undefined || Array.isArray(v);
+    if (!isArrOrUndef(days) || !isArrOrUndef(times) || !isArrOrUndef(splits)) {
+      return res.status(400).json({ message: "days/times/splits must be arrays." });
+    }
+
+    // Optional: strict allow-list validation with clear errors
+    const badDay = (days ?? []).find(d => !(String(d).toLowerCase() in DAY_BITS));
+    const badTime = (times ?? []).find(t => !(String(t).toLowerCase() in TIME_BITS));
+    const badSplit = (splits ?? []).find(s => !(String(s).toLowerCase() in SPLIT_BITS));
+    if (badDay || badTime || badSplit) {
+      return res.status(400).json({
+        message: "Invalid value(s) in days/times/splits.",
+        allowed: {
+          days: Object.keys(DAY_BITS),
+          times: Object.keys(TIME_BITS),
+          splits: Object.keys(SPLIT_BITS),
+        },
+        invalid: { badDay, badTime, badSplit }
+      });
+    }
+
+    const questionnaireBitmask = toBitmask({ days, times, splits });
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { questionnaireBitmask } },
+      { new: true, projection: { password: 0, emailVerifyTokenHash: 0, emailVerifyTokenExpiresAt: 0 } }
+    ).lean();
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    return res.json({
+      message: "Quiz results saved.",
+      questionnaireBitmask,
+      // Echo normalized selections back (handy for UI confirmation)
+      normalized: {
+        days: (days ?? []).map(s => String(s).toLowerCase()),
+        times: (times ?? []).map(s => String(s).toLowerCase()),
+        splits: (splits ?? []).map(s => String(s).toLowerCase()),
+      },
+      user
+    });
+  } catch (err) {
+    console.error("[saveQuizResults] error:", err);
+    return res.status(500).json({ message: "Failed to save quiz results." });
+  }
+};
+
+
