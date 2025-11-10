@@ -8,7 +8,7 @@ function Dashboard() {
     <div className="Dashboard">
       <SideTab />
       <CenterTab />
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
