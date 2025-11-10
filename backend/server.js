@@ -41,15 +41,14 @@ app.listen(port, () => {
 
 // FOR DIGITAL OCEAN SERVER
 
-import path from "path";
-//import express from "express";
-//const app = express();
+// import path from "path";
+// //import express from "express";
+// //const app = express();
 
-// ✅ serve the frontend build
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// app.use(express.static(path.join(__dirname, "../frontend/build")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+// });
 
 //
