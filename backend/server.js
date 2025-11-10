@@ -42,7 +42,7 @@ app.listen(port, () => {
 // FOR DIGITAL OCEAN SERVER
 
 import path from "path";
-import express from "express";
+//import express from "express";
 //const app = express();
 
 // ✅ serve the frontend build
