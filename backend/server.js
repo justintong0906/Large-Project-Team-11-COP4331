@@ -34,3 +34,22 @@ app.use("/api/auth", authRoutes)
 app.listen(port, () => {
     console.log("Server is running on port 5001");
 });
+
+
+
+
+
+// FOR DIGITAL OCEAN SERVER
+
+import path from "path";
+import express from "express";
+//const app = express();
+
+// ✅ serve the frontend build
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
+
+//
