@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./LoginBox.css"
+const API_BASE = process.env.REACT_APP_API_BASE;
 
 function ShowBox() {
     const [view, setView] = useState("login");
@@ -25,7 +26,8 @@ function LoginBox({setView}){
         const password = document.getElementById("PasswordInput").value;
         
         //call API
-        const res = await fetch("http://localhost:5001/api/auth/login", {
+        console.log(`${API_BASE}/auth/login`);
+        const res = await fetch(`${API_BASE}/auth/login`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({identifier, password})
@@ -77,7 +79,7 @@ function SignupBox({setView}){
         const password = document.getElementById("SignupPasswordInput").value;
         const confirmpassword = document.getElementById("SignupConfirmPasswordInput").value;
         
-        const res = await fetch("http://localhost:5001/api/auth/signup", {
+        const res = await fetch(`${API_BASE}/auth/signup`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({username, email, password, confirmpassword})
