@@ -148,23 +148,21 @@ function toBitmask({ days = [], times = [], splits = [] }) {
 
 export const saveQuizResults = async (req, res) => {
   try {
-    // Expect auth middleware to set req.userId (preferred).
-    // Fallback to :id param if you want to support admin updates.
+    // Prefer auth middleware to set userId; allow :id fallback (admin flows)
     const userId = req.userId ?? req.params.id;
 
     if (!userId || !mongoose.isValidObjectId(userId)) {
       return res.status(401).json({ message: "Unauthorized or invalid user id." });
     }
 
+    // --- Part 1: bitmask from days/times/splits ---
     const { days, times, splits } = req.body ?? {};
 
-    // Validate payload shapes (arrays or undefined)
     const isArrOrUndef = (v) => v === undefined || Array.isArray(v);
     if (!isArrOrUndef(days) || !isArrOrUndef(times) || !isArrOrUndef(splits)) {
       return res.status(400).json({ message: "days/times/splits must be arrays." });
     }
 
-    // Optional: strict allow-list validation with clear errors
     const badDay = (days ?? []).find(d => !(String(d).toLowerCase() in DAY_BITS));
     const badTime = (times ?? []).find(t => !(String(t).toLowerCase() in TIME_BITS));
     const badSplit = (splits ?? []).find(s => !(String(s).toLowerCase() in SPLIT_BITS));
@@ -182,10 +180,67 @@ export const saveQuizResults = async (req, res) => {
 
     const questionnaireBitmask = toBitmask({ days, times, splits });
 
+    // --- Part 2: optional profile fields (saved alongside) ---
+    const {
+      // all optional
+      age,
+      gender, // "male" | "female" | "nonbinary" | "other" | "prefer_not_to_say"
+      major,
+      bio,
+      photo,
+      yearsOfExperience,
+      genderPreferences, // "coed" | "single_gender" | "no_preference"
+    } = req.body?.profile ?? {};
+
+    // Build $set only with provided/allowed fields
+    const profileSet = {};
+    const pushIfDefined = (key, value, test = (v) => v !== undefined) => {
+      if (test(value)) profileSet[`profile.${key}`] = value;
+    };
+
+    // Basic validations mirroring your schema constraints
+    const inEnum = (v, arr) => v === undefined || arr.includes(String(v));
+    const within = (v, min, max) => v === undefined || (typeof v === "number" && v >= min && v <= max);
+    const strMax = (v, max) => v === undefined || (typeof v === "string" && v.trim().length <= max);
+
+    // Validate
+    if (!within(age, 0, 120)) return res.status(400).json({ message: "age must be 0..120" });
+    if (!inEnum(gender, ["male", "female", "nonbinary", "other", "prefer_not_to_say"])) {
+      return res.status(400).json({ message: "gender invalid" });
+    }
+    if (!strMax(major, 120)) return res.status(400).json({ message: "major too long (max 120)" });
+    if (!strMax(bio, 2000)) return res.status(400).json({ message: "bio too long (max 2000)" });
+    if (!within(yearsOfExperience, 0, 100)) {
+      return res.status(400).json({ message: "yearsOfExperience must be 0..100" });
+    }
+    if (!inEnum(genderPreferences, ["coed", "single_gender", "no_preference"])) {
+      return res.status(400).json({ message: "genderPreferences invalid" });
+    }
+
+    // Pack allowed fields if present
+    pushIfDefined("age", age);
+    pushIfDefined("gender", gender);
+    pushIfDefined("major", typeof major === "string" ? major.trim() : major);
+    pushIfDefined("bio", typeof bio === "string" ? bio.trim() : bio);
+    pushIfDefined("photo", typeof photo === "string" ? photo.trim() : photo);
+    pushIfDefined("yearsOfExperience", yearsOfExperience);
+    pushIfDefined("genderPreferences", genderPreferences);
+
+    // Final update document
+    const updateDoc = {
+      $set: {
+        questionnaireBitmask,
+        ...profileSet,
+      },
+    };
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { $set: { questionnaireBitmask } },
-      { new: true, projection: { password: 0, emailVerifyTokenHash: 0, emailVerifyTokenExpiresAt: 0 } }
+      updateDoc,
+      {
+        new: true,
+        projection: { password: 0, emailVerifyTokenHash: 0, emailVerifyTokenExpiresAt: 0 }
+      }
     ).lean();
 
     if (!user) return res.status(404).json({ message: "User not found." });
@@ -193,13 +248,13 @@ export const saveQuizResults = async (req, res) => {
     return res.json({
       message: "Quiz results saved.",
       questionnaireBitmask,
-      // Echo normalized selections back (handy for UI confirmation)
       normalized: {
         days: (days ?? []).map(s => String(s).toLowerCase()),
         times: (times ?? []).map(s => String(s).toLowerCase()),
         splits: (splits ?? []).map(s => String(s).toLowerCase()),
       },
-      user
+      updatedProfileFields: Object.keys(profileSet).map(k => k.replace(/^profile\./, "")),
+      user,
     });
   } catch (err) {
     console.error("[saveQuizResults] error:", err);
