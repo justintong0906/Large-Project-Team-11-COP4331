@@ -1,36 +1,11 @@
-import nodemailer from "nodemailer";
-import 'dotenv/config';
+import { Resend } from "resend";
+import "dotenv/config";
 
-/**
- * Required env:
- * MAILERSEND_HOST=smtp.mailersend.net
- * MAILERSEND_PORT=587
- * MAILERSEND_USER=ms_...@your-mailersend-domain
- * MAILERSEND_PASS=...
- * MAIL_FROM="WebApp <no-reply@your-verified-domain.com>"
- * FRONTEND_URL=https://yourfrontend.com   // or http://localhost:5173 while testing
- */
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-
-
-const transporter = nodemailer.createTransport({
-  host: process.env.MAILERSEND_HOST,
-  port: process.env.MAILERSEND_PORT,
-  secure: false, // STARTTLS on 587
-  auth: {
-    user: process.env.MAILERSEND_USER,
-    pass: process.env.MAILERSEND_PASS,
-  },
-  
-});
-
-/**
- * Sends the verification email used by your signup flow.
- */
 export async function sendVerificationEmail({ to, uid, token }) {
   const base = process.env.FRONTEND_URL;
   const from = process.env.MAIL_FROM;
-
   const verifyUrl = `${base}/verify?uid=${encodeURIComponent(uid)}&token=${encodeURIComponent(token)}`;
 
   const html = `
@@ -38,7 +13,9 @@ export async function sendVerificationEmail({ to, uid, token }) {
       <h2>Verify your email</h2>
       <p>Thanks for signing up. Click the button below to verify your email.</p>
       <p>
-        <a href="${verifyUrl}" style="display:inline-block;padding:10px 16px;border:1px solid #ddd;border-radius:8px;text-decoration:none">
+        <a href="${verifyUrl}"
+           style="display:inline-block;padding:10px 16px;border:1px solid #ddd;
+                  border-radius:8px;text-decoration:none;background:#111;color:#fff">
           Verify Email
         </a>
       </p>
@@ -47,22 +24,21 @@ export async function sendVerificationEmail({ to, uid, token }) {
     </div>
   `;
 
-  await transporter.sendMail({
+  await resend.emails.send({
     from,
     to,
     subject: "Verify your email",
     html,
+    text: `Verify your email: ${verifyUrl}`,
   });
 }
 
-/** Optional: call once on server boot to confirm SMTP connectivity */
+/** Optional: lightweight connectivity check */
 export async function verifyMailerConnection() {
   try {
-    await transporter.verify();
-    console.log(" MailerSend SMTP verified");
-    console.log("MAILERSEND_HOST =", process.env.MAILERSEND_HOST);
+    const result = await resend.domains.list(); // simple API call
+    console.log("✅ Resend API reachable. Domains count:", result.data?.length ?? "unknown");
   } catch (err) {
-    console.error(" MailerSend SMTP verification failed:", err.message);
-    console.log("MAILERSEND_HOST =", process.env.MAILERSEND_HOST);
+    console.error("❌ Resend API check failed:", err.message);
   }
 }

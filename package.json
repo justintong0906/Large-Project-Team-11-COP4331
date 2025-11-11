@@ -1,5 +1,17 @@
 {
+  "name": "large-project-team-11-cop4331",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npm run dev",
+    "server": "cd backend && node server.js",
+    "client": "cd frontend && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
   "dependencies": {
     "react-router-dom": "^7.9.5"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   }
 }
