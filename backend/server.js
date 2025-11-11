@@ -25,6 +25,14 @@ app.use("/api/users", userRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/auth", authRoutes);
 
+
+
+// TEMP: direct route to prove server wiring (should return JSON)
+app.get("/api/auth/health", (_req, res) => {
+  res.json({ ok: true, from: "server.js" });
+});
+
+
 // DB + mail
 connectDB();
 try {
@@ -40,12 +48,11 @@ const __dirname = path.dirname(__filename);
 
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-// ✅ SPA fallback without path-to-regexp parsing
-// (No path string; matches anything not handled above)
-app.use((req, res) => {
+// Matches everything, no compile errors
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
+
 
 // Start server
 app.listen(port, () => {

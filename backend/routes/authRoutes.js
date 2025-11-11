@@ -15,6 +15,8 @@ router.post("/signup", signup);
 router.post("/login", login);
 router.get("/verify-email", verifyEmail);
 router.post("/resend-verification", resendVerification);
+router.get("/health", (_req, res) => res.json({ ok: true }));
+
 
 // --- Protected route (requires valid JWT) ---
 router.post("/update-password", requireAuth, updatePassword);
