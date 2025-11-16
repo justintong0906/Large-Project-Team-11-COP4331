@@ -19,6 +19,7 @@ function ShowBox() {
 
 function LoginBox({setView}){
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     const handleLogin = async () => {
         console.log("Login button clicked");
@@ -36,9 +37,12 @@ function LoginBox({setView}){
 
         //response
         if (res.ok) {
+            setError("");
+            setSuccess("Login successful!");
             localStorage.setItem("token", data.token);
-            window.location.href = "/";
+            setTimeout(() => window.location.href = "/", 1000);
         } else {
+            setSuccess("");
             setError(data.message);
         }
     };
@@ -51,6 +55,7 @@ function LoginBox({setView}){
                 <input id="IdentifierInput" class="textbox" placeholder="Email/Username" style={{marginBottom:"5px"}}></input>
                 <input id="PasswordInput" class="textbox" placeholder="Password" type="password"></input>
                 {error && <p style={{color:"red"}}>{error}</p>}
+                {success && <p style={{color:"green"}}>{success}</p>}
             </div>
             <button class="lbContent LoginButton" onClick={handleLogin}>Log in</button>
             <div class="lbContent">
@@ -72,6 +77,7 @@ function LoginBox({setView}){
 
 function SignupBox({setView}){
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     
     const handleSignup = async () => {
         const email = document.getElementById("EmailInput").value;
@@ -87,9 +93,12 @@ function SignupBox({setView}){
         const data = await res.json();
         
         if (res.ok) {
+            console.log("Signup successful!");
+            console.log(data.message)
             setError("");
-            alert(data.message);
+            setSuccess(data.message);
         } else {
+            setSuccess("");
             setError(data.message);
         }
     };
@@ -103,6 +112,7 @@ function SignupBox({setView}){
                 <input id="SignupPasswordInput" class="textbox" placeholder="Password " type="password" style={{marginBottom:"5px"}}></input><br/>
                 <input id="SignupConfirmPasswordInput" class="textbox" placeholder="Confirm Password" type="password"></input>
                 {error && <p style={{color:"red"}}>{error}</p>}
+                {success && <p style={{color:"green"}}>{success}</p>}
             </div>
             <button class="lbContent LoginButton" onClick={handleSignup}>Sign up</button>
 

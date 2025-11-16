@@ -5,7 +5,7 @@
     width: 450px;
     height:400px;
     transform: translateY(-50%);
-    background: rgba(121, 126, 50, 0.9);
+    background: #6d682a;
     border: 3px solid #8e917b;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
@@ -18,8 +18,9 @@
     font-family: 'Verdana', sans-serif;
     font-weight:600;
     font-size: 2.2rem;
-    color: #ffdf5e;
+    color: white;
     margin-bottom: 30px;
+    text-shadow:1px 1px 3px grey;
 }
 
 .LoginGraphicText{
@@ -28,4 +29,5 @@
     color: white;
     margin-bottom: 15px;
     font-size: 1.1rem;
+    text-shadow:1px 1px 1px grey;
 }
