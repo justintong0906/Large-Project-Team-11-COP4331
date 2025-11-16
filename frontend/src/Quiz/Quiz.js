@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
 import "./Quiz.css"
+
+import { useNavigate } from "react-router-dom"
+
 const API_BASE = process.env.REACT_APP_API_BASE;
 
 function Quiz(){
 
     //send user back to login if not logged in
-    // const navigate = useNavigate();
-    // useEffect(() => {
-    //     const token = localStorage.getItem("token");
-    //     if (!token) {
-    //         navigate("/login");
-    //     }
-    // }, [navigate]);
+    const navigate = useNavigate();
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate("/login");
+        }
+    }, [navigate]);
 
 
     // changing pfp

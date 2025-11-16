@@ -97,6 +97,9 @@ function SignupBox({setView}){
             console.log(data.message)
             setError("");
             setSuccess(data.message);
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
         } else {
             setSuccess("");
             setError(data.message);
