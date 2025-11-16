@@ -1,0 +1,47 @@
+.RightTab {
+	position: relative;
+	left:55vh;
+}
+.LeftTab {
+	position: absolute;
+	left:5vh;
+}
+.TopTab {
+	position: absolute;
+	top: 5%;
+}
+.BottomTab {
+	position: absolute;
+	bottom: 5%;
+}
+
+.container {
+	height: 60vh;
+	width: 30vw;
+	background-color: #333;
+}
+
+.internal_container {
+	height: 25vh;
+	width: 29vw;
+	background-color: #999;
+}
+
+.fake_tab {
+	display: inline-block;
+	margin-left: 40px;
+}
+
+.text_box {
+	text-align: justify;
+	text-justify :auto; 
+	padding: 15px;
+	text-overflow :ellipsis; 
+	overflow :auto;
+	max-height :100%;
+}
+
+p {
+	white-space: pre-wrap;
+	font-family: 'Akkurat Mono', monospace;
+}
