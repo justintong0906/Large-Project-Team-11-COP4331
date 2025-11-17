@@ -3,13 +3,16 @@ import mongoose from "mongoose";
 
 export const getUserProfile = async (req, res) => {
   try {
-    const { id } = req.params;
+    /**
+     * If hitting /me → req.params.id is undefined.
+     * So default to req.userId (set by requireAuth).
+     */
+    const id = req.params.id ?? req.userId;
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: "Invalid user id" });
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid or missing user id" });
     }
 
-    // find user but exclude sensitive info
     const user = await User.findById(id)
       .select("-password -emailVerifyTokenHash -emailVerifyTokenExpiresAt");
 
@@ -23,6 +26,7 @@ export const getUserProfile = async (req, res) => {
     return res.status(500).json({ message: "Failed to fetch profile" });
   }
 };
+
 
 export const getRandomUser = async (req, res) => {
   try {
@@ -183,6 +187,7 @@ export const saveQuizResults = async (req, res) => {
     // --- Part 2: optional profile fields (saved alongside) ---
     const {
       // all optional
+      name,
       age,
       gender, // "male" | "female" | "nonbinary" | "other" | "prefer_not_to_say"
       major,
@@ -204,6 +209,10 @@ export const saveQuizResults = async (req, res) => {
     const strMax = (v, max) => v === undefined || (typeof v === "string" && v.trim().length <= max);
 
     // Validate
+    if (!strMax(name, 120)) {
+      return res.status(400).json({ message: "name too long (max 120)" });
+    }
+
     if (!within(age, 0, 120)) return res.status(400).json({ message: "age must be 0..120" });
     if (!inEnum(gender, ["male", "female", "nonbinary", "other", "prefer_not_to_say"])) {
       return res.status(400).json({ message: "gender invalid" });
@@ -218,6 +227,8 @@ export const saveQuizResults = async (req, res) => {
     }
 
     // Pack allowed fields if present
+    pushIfDefined("name", typeof name === "string" ? name.trim() : name);
+
     pushIfDefined("age", age);
     pushIfDefined("gender", gender);
     pushIfDefined("major", typeof major === "string" ? major.trim() : major);

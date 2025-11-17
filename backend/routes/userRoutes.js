@@ -3,7 +3,9 @@ import {requireAuth} from "../middleware/requireAuth.js"
 import { getUserProfile,getRandomCompatibleUser, saveQuizResults} from "../controllers/userController.js";
 const router = express.Router();
 
-router.get("/:id", getUserProfile);
+router.get("/me", requireAuth, getUserProfile);
+router.get("/:id", requireAuth, getUserProfile);
+
 router.get("/random-compatible",requireAuth, getRandomCompatibleUser);
 
 // Authenticated self-update (recommended)

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 const profileSchema = new mongoose.Schema(
   {
+    name: { type: String, trim: true, maxlength: 120 },
     age: { type: Number, min: 0, max: 120 },
     gender: { type: String, enum: ["male", "female", "nonbinary", "other", "prefer_not_to_say"], trim: true },
     major: { type: String, trim: true, maxlength: 120 },
@@ -29,6 +30,11 @@ const userSchema = new mongoose.Schema(
     questionnaireBitmask: { type: Number, default: 0 },
 
     profile: { type: profileSchema, default: {} },
+
+
+    pendingMatches: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
+
 
 
 
