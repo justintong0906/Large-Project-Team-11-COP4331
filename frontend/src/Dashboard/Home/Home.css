@@ -1,10 +1,24 @@
+.tabs-container {
+    display: flex;
+    justify-content: space-between; /* Adjusts the space between the flex items */
+    width: 100%;
+    padding: 0 4vw; /* Adds horizontal padding */;
+}
+
+.tab {
+    background-color: #333; /* Unified background for both tabs */
+    width: 42%; /* Set a consistent width for both tabs */
+    height: 60vh;
+    position: relative;
+}
+
 .RightTab {
 	position: relative;
-	left:55vh;
+	left:55vw;
 }
 .LeftTab {
 	position: absolute;
-	left:5vh;
+	left:5vw;
 }
 .TopTab {
 	position: absolute;
@@ -16,15 +30,14 @@
 }
 
 .container {
-	height: 60vh;
-	width: 30vw;
 	background-color: #333;
 }
 
 .internal_container {
 	height: 25vh;
-	width: 29vw;
+	width: 100%;
 	background-color: #999;
+	flex-grow: 1;
 }
 
 .fake_tab {
@@ -44,4 +57,18 @@
 p {
 	white-space: pre-wrap;
 	font-family: 'Akkurat Mono', monospace;
+}
+
+.button-generic {
+	position:absolute;
+	bottom: 20px;
+	display: block;
+	padding: 12px 24px;
+	font-size: 16px;
+	background-color: #336;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	font-weight: bold;
 }
