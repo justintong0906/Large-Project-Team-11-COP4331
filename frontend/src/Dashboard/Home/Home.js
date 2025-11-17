@@ -136,9 +136,34 @@ function Home() {
 		}
 	};
 	
+	const sendMatch = () => {
+		if (token) {
+			fetch(`${API_BASE}/users/send_match`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`
+				},
+				body: JSON.stringify({ data: randomUser.username })
+			})
+		};
+	};
+	
 	const switchUserFake = () => {
 		console.log("SWITCHING");
 		setRandomUser(prevUser => (prevUser === mockUser ? mockUser2 : mockUser));
+	};
+	
+	const accept_match = () => {
+		console.log("MATCHING");
+		// Call match endpoint function as well here
+		sendMatch();
+		RandomUserComponent();
+	};
+	
+	const decline_match = () => {
+		console.log("DECLINING MATCH");
+		RandomUserComponent();
 	};
 		
 	useEffect(() => {
@@ -157,14 +182,19 @@ function Home() {
 	}
 
 	if (!randomUser) {
-		return <div>Loading...</div>;
+		if (token) {
+			return <div>Error: Can't find a compatible user</div>
+		}
+		else {
+			return <div>Loading...</div>;
+		}
 	}
 	
 
 	return(
-		<div>
-			<div id="righttab" style={{position:"absolute", right:"40px", 'text-align':"left"}}>
-				<div class="container" style={{"background-color":'#336'}}>
+		<div className="tabs-container">
+			<div id="righttab" style={{position:"absolute", right:"40px", 'text-align':"left"}} className="tab">
+				<div style={{"background-color":'#336'}}>
 					<center>
 						<h2>Biography</h2>
 						<div class="internal_container">
@@ -174,54 +204,45 @@ function Home() {
 					<p>Splits        : {decodedData.splits ? decodedData.splits.join(', ') : 'N/A'}</p>
 					<p>Days Available: {decodedData.days ? decodedData.days.join(', ') : 'N/A'}</p>
 					<p>Experience    : {randomUser ? randomUser.profile.yearsOfExperience : 'N/A'} years</p>
+					<button 
+						onClick={token ? accept_match : switchUserFake}
+						className="button-generic"
+						style={{'background-color':'#393', 'right':'20px'}}
+						disabled={!randomUser} // Disable while loading
+					>
+						{randomUser ? "Accept Match" : "Loading..."}
+					</button>
 				</div>
 			</div>
-			<div id="lefttab" style={{position:"absolute", left:"40px", 'text-align':"left"}}>
-				<div class="container">
+			<div id="lefttab" style={{position:"absolute", left:"40px", 'text-align':"left"}} className="tab">
+				<div style={{"background-color":'#633'}}>
 					<center>
 						<h2 style={{color:'#333'}}>.</h2>
-						<div class="internal_container">
-							<img src={randomUser ? randomUser.profile.photo : ""} class="internal_container" style={{position:"relative", 'object-fit': "contain"}}></img>
-							<br />
-							{ /*
-							<div style={{bottom:"5vh", position:"absolute"}}>
-								<input 
-									type="file" accept="image/*" // this is the default "choose file" button and prompts to file explorer
-									onChange={handleImageUpload}
-								/>
-							</div>
-							*/ }
-							< br />
-							<h3><b>USERNAME: </b>{randomUser ? (randomUser.username) : ("Loading...") }</h3>
-							<h3><b>AGE: </b>{randomUser ? (randomUser.profile.age) : (99)}</h3>
+						<img src={randomUser ? randomUser.profile.photo : ""} class="internal_container" style={{position:"relative", 'object-fit': "contain"}}></img>
+						<br />
+						{ /*
+						<div style={{bottom:"5vh", position:"absolute"}}>
+							<input 
+								type="file" accept="image/*" // this is the default "choose file" button and prompts to file explorer
+								onChange={handleImageUpload}
+							/>
 						</div>
-						{/* New User Button */}
-						<div style={{
-							position: "absolute", 
-							bottom: "40px", 
-							left: "50%", 
-							transform: "translateX(-50%)",
-							textAlign: "center"
-						}}>
+						*/ }
+						< br />
+						<h3><b>USERNAME: </b>{randomUser ? (randomUser.username) : ("Loading...") }</h3>
+						<h3><b>AGE: </b>{randomUser ? (randomUser.profile.age) : (99)}</h3>
+						
 						{/* Use switchUserFake for testing locally */}
-							<button 
-							onClick={token ? RandomUserComponent : switchUserFake}
-								style={{
-									padding: "12px 24px",
-									fontSize: "16px",
-									backgroundColor: "#336",
-									color: "white",
-									border: "none",
-									borderRadius: "8px",
-									cursor: "pointer",
-									fontWeight: "bold"
-								}}
-								disabled={!randomUser} // Disable while loading
-							>
-								{randomUser ? "Find New User" : "Loading..."}
-							</button>
-						</div>
+						<button 
+						onClick={token ? decline_match : switchUserFake}
+							className="button-generic"
+							style={{'background-color':'#933', 'left':'20px'}}
+							disabled={!randomUser} // Disable while loading
+						>
+							{randomUser ? "Decline Match" : "Loading..."}
+						</button>
 					</center>
+					
 				</ div>
 			</div>
 		</div>
