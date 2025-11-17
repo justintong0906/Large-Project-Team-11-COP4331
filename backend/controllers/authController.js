@@ -173,10 +173,13 @@ export const updatePassword = async (req, res) => {
 
 // GET /api/auth/verify-email?uid=...&token=...
 // controllers/auth.controller.js
+// GET /api/auth/verify-email?uid=...&token=...
 export const verifyEmail = async (req, res) => {
   try {
     const { uid, token } = req.query;
-    if (!uid || !token) return res.status(400).json({ message: "Missing uid or token." });
+    if (!uid || !token) {
+      return res.redirect(`${process.env.FRONTEND_URL}/?status=missing`);
+    }
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -193,21 +196,24 @@ export const verifyEmail = async (req, res) => {
     );
 
     if (result.modifiedCount === 0) {
-      // Handle already-verified OR invalid/expired token separately if you want:
       const already = await User.findOne({ _id: uid, emailVerified: true });
       if (already) {
-        return res.redirect(`${process.env.FRONTEND_URL}/verified?status=already`);
-
+        // already verified → send to main page with flag
+        return res.redirect(`${process.env.FRONTEND_URL}/?status=already`);
       }
-      return res.status(400).json({ message: "Verification link is invalid or expired." });
+
+      // invalid or expired token → main page with error flag
+      return res.redirect(`${process.env.FRONTEND_URL}/?status=invalid`);
     }
 
-    return res.redirect(`${process.env.FRONTEND_URL}/verified?status=success`);
+    // success → main page with success flag
+    return res.redirect(`${process.env.FRONTEND_URL}/?status=success`);
   } catch (e) {
     console.error("[verifyEmail] error:", e);
-    return res.status(500).json({ message: "Verification failed." });
+    return res.redirect(`${process.env.FRONTEND_URL}/?status=error`);
   }
 };
+
 
 
 // POST /api/auth/resend-verification { email }
