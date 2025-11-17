@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import "dotenv/config";
+const API_BASE = process.env.API_BASE;
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -8,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Backend (5001) verifies the token and then redirects to frontend (3000) with ?status=success or ?status=failed.
  */
 export async function sendVerificationEmail({ to, uid, token }) {
-  const apiBase = process.env.API_BASE_URL || "http://localhost:5001";
+  const apiBase = process.env.API_BASE_URL || `${API_BASE}`;
   const from = process.env.MAIL_FROM;
 
   // ✅ This URL hits your backend API first (not the frontend)

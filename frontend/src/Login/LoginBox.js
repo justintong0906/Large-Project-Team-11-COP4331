@@ -132,13 +132,29 @@ function SignupBox({setView}){
 
 function ForgotPassword({setView}){
     const [message, setMessage] = useState("");
+
+    const handleForgot = async () => {
+        const email = document.getElementById("ForgotEmailInput").value;
+        const res = await fetch(`${API_BASE}/auth/forgot`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({email})
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            setMessage(data.message);
+        } else {
+            setMessage(data.message);
+        }
+    };
     
     return(
         <div className="LoginBox">
             <h2 class="header">Forgot Password</h2>
             <input id="ForgotEmailInput" class="textbox" placeholder="Email" style={{marginBottom:"10px"}}></input>
             {message && <p>{message}</p>}
-            <button class="lbContent LoginButton" onClick={() => setMessage("Instructions has been sent to email, if exists.")}>Send Email</button><br/>
+            <button class="lbContent LoginButton" onClick={handleForgot}>Send Email</button><br/>
             <a class="lbContent hlink TextButton" style={{fontSize: '15pt'}} onClick={() => setView("login")} >Back to Login</a>
         </div>
     )
