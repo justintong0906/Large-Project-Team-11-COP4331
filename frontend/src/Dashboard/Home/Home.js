@@ -1,11 +1,71 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css"
 const API_BASE = process.env.REACT_APP_API_BASE;
+
+const mockProfile = {
+	age: 25,
+	gender: "other",
+	major: "Undecided",
+	bio: "Don't look, this is a fake user.",
+	photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_lvjjRAVDQ-nBDq_4dy1xCyRjjDaHV-Tqcw&s",
+	yearsOfExperience: 7,
+	genderPreferences: "no_preference"
+};
+
+
+const mockProfile2 = {
+	age: 37,
+	gender: "male",
+	major: "Political Science",
+	bio: "Lorem nope isum",
+	photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_lvjjRAVDQ-nBDq_4dy1xCyRjjDaHV-Tqcw&s",
+	yearsOfExperience: 17,
+	genderPreferences: "co_ed"
+};
+
+
+
+
+const mockUser = {
+	username: "testuser",
+    email: "someemail@gmail.com",
+    password: "testpassword",
+    emailVerified: true,
+	
+    emailVerifyTokenHash: "randomGibberishHash",
+    emailVerifyTokenExpiresAt: new Date('2025-12-31T09:00:00Z'),
+
+
+    questionnaireBitmask: 7038,
+
+    profile: mockProfile
+};
+
+const mockUser2 = {
+	username: "SecondaryUser",
+    email: "notemail@gmail.com",
+    password: "testpassword2",
+    emailVerified: true,
+	
+    emailVerifyTokenHash: "randomGibberishHash2",
+    emailVerifyTokenExpiresAt: new Date('2025-12-30T09:00:00Z'),
+
+
+    questionnaireBitmask: 7032,
+
+    profile: mockProfile2
+};
 
 
 function Home() {
     const [imageSrc, setImageSrc] = useState("");
-    const handleImageUpload = (e) => {
+    const [randomUser, setRandomUser] = useState(null);
+    const [decodedData, setDecodedData] = useState({ days: [], times: [], splits: [] });
+	const navigate = useNavigate();
+	const token = localStorage.getItem("token");
+	
+	const handleImageUpload = (e) => {
         const file = e.target.files[0]; // file (e) -> binary
         const reader = new FileReader();
         reader.onload = () => { 
@@ -15,55 +75,113 @@ function Home() {
         reader.readAsDataURL(file); // binary -> string
     };
 	
-	const [error, setError] = useState("");
-	{ /*
-	const handleLogin = async () => {
-        console.log("Login button clicked");
-        const identifier = document.getElementById("IdentifierInput").value;
-        const password = document.getElementById("PasswordInput").value;
+	const [error, setError] = useState("");	
+	
+	
+	const decodeBitmask = (bitmask) => {
+        if (!bitmask && bitmask !== 0) return {};
         
-        //call API
-        console.log(`${API_BASE}/random-compatible`);
-        const res = await fetch(`${API_BASE}/random-compatible`, {
-            method: "GET",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({identifier, password})
-        });
-        const data = await res.json();
-
-        //response
-        if (res.ok) {
-            localStorage.setItem("token", data.token);
-            window.location.href = "/";
-        } else {
-            setError(data.message);
-        }
+        const DAY_BITS = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        const TIME_BITS = { Morning: 7, Afternoon: 8, Evening: 9 };
+        const SPLIT_BITS = { Arnold: 10, Ppl: 11, Brosplit: 12 };
+        
+        const decodeGroup = (mask, bitMap) => {
+            return Object.entries(bitMap)
+                .filter(([_, bit]) => mask & (1 << bit))
+                .map(([key]) => key);
+        };
+        
+        return {
+            days: decodeGroup(bitmask, DAY_BITS),
+            times: decodeGroup(bitmask, TIME_BITS),
+            splits: decodeGroup(bitmask, SPLIT_BITS)
+        };
     };
-	*/}
+	
+	const RandomUserComponent = () => {
+		const fakeToken = 'fake-jwt-token-' + Math.random().toString(36).substr(2, 9);
+		console.log(token);
+		console.log(fakeToken);
+		if (token) {
+		  fetch(`${API_BASE}/users/random-compatible`, {
+			method: "GET",
+			headers: {
+			  "Content-Type": "application/json",
+			  "Authorization": `Bearer ${token}`
+			}
+		  })
+		  .then(response => {
+			if (!response.ok) {
+			  //throw new Error("Network response was not ok");
+			  console.warn("NO CONNECTION MADE: Using Mock User");
+			  setRandomUser(mockUser);
+			  return;
+			}
+			return response.json();
+		  })
+		  .then(data => {
+			setRandomUser(data);
+		  })
+		  .catch(err => {
+			console.error("Error fetching random user:", err);
+			setError(err.message);
+		  });
+		} else {
+			if (fakeToken) {
+				setRandomUser(mockUser);
+				return;
+			} else {
+				navigate("/login"); // Redirect to login if no token is found
+			}
+		}
+	};
+	
+	const switchUserFake = () => {
+		console.log("SWITCHING");
+		setRandomUser(prevUser => (prevUser === mockUser ? mockUser2 : mockUser));
+	};
+		
+	useEffect(() => {
+        RandomUserComponent();
+    }, []);
+	
+	useEffect(() => {
+        if (randomUser) {
+            const decoded = decodeBitmask(randomUser.questionnaireBitmask);
+            setDecodedData(decoded);
+        }
+    }, [randomUser]);
+	
+	if (error) {
+		return <div>Error: {error}</div>;
+	}
+
+	if (!randomUser) {
+		return <div>Loading...</div>;
+	}
+	
 
 	return(
 		<div>
 			<div id="righttab" style={{position:"absolute", right:"40px", 'text-align':"left"}}>
-				<p>Hey</p>
 				<div class="container" style={{"background-color":'#336'}}>
 					<center>
 						<h2>Biography</h2>
 						<div class="internal_container">
-						<p class="text_box"><span class="fake_tab" />Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. </p>
+							<p class="text_box"><span class="fake_tab" />{randomUser ? (randomUser.profile.bio) : ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")}</p>
 						</div>
 					</center>
-					<p>Splits        : Arnolds</p>
-					<p>Days Available: Mon, Wedn, Fri</p>
-					<p>Experience    : 5 years</p>
+					<p>Splits        : {decodedData.splits ? decodedData.splits.join(', ') : 'N/A'}</p>
+					<p>Days Available: {decodedData.days ? decodedData.days.join(', ') : 'N/A'}</p>
+					<p>Experience    : {randomUser ? randomUser.profile.yearsOfExperience : 'N/A'} years</p>
 				</div>
 			</div>
 			<div id="lefttab" style={{position:"absolute", left:"40px", 'text-align':"left"}}>
-				<p>Hey</p>
 				<div class="container">
 					<center>
 						<h2 style={{color:'#333'}}>.</h2>
 						<div class="internal_container">
-							<img src={imageSrc} class="internal_container" style={{position:"relative", 'object-fit': "contain"}}></img>
+							<img src={randomUser ? randomUser.profile.photo : ""} class="internal_container" style={{position:"relative", 'object-fit': "contain"}}></img>
 							<br />
 							{ /*
 							<div style={{bottom:"5vh", position:"absolute"}}>
@@ -74,13 +192,38 @@ function Home() {
 							</div>
 							*/ }
 							< br />
+							<h3><b>USERNAME: </b>{randomUser ? (randomUser.username) : ("Loading...") }</h3>
+							<h3><b>AGE: </b>{randomUser ? (randomUser.profile.age) : (99)}</h3>
+						</div>
+						{/* New User Button */}
+						<div style={{
+							position: "absolute", 
+							bottom: "40px", 
+							left: "50%", 
+							transform: "translateX(-50%)",
+							textAlign: "center"
+						}}>
+						{/* Use switchUserFake for testing locally */}
+							<button 
+							onClick={token ? RandomUserComponent : switchUserFake}
+								style={{
+									padding: "12px 24px",
+									fontSize: "16px",
+									backgroundColor: "#336",
+									color: "white",
+									border: "none",
+									borderRadius: "8px",
+									cursor: "pointer",
+									fontWeight: "bold"
+								}}
+								disabled={!randomUser} // Disable while loading
+							>
+								{randomUser ? "Find New User" : "Loading..."}
+							</button>
 						</div>
 					</center>
 				</ div>
 			</div>
-			<center>
-				<p style={{'text-align':"center"}}>Mid</p>
-			</center>
 		</div>
 		
 	);
