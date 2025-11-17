@@ -4,6 +4,10 @@ import logo from "../../images/temp-logo-modified.png"
 import { Link } from 'react-router-dom';
 
 function SideTab() {
+    const handleLogout = (e) => {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+    };
     
     return(
         <div className="SideTab">
@@ -13,7 +17,7 @@ function SideTab() {
             <Link to="/" className="NavItem TextButton">Home</Link>
             <Link to="/friends" className="NavItem TextButton">Friends</Link>
             <Link to="/profile" className="NavItem TextButton">Profile</Link>
-            <Link to="/login" className="NavItem TextButton" style={{marginTop: 'auto'}}>Log Out</Link>
+            <a href="#" onClick={handleLogout} className="NavItem TextButton" style={{marginTop: 'auto'}}>Log Out</a>
             {/* <LoginSideTab/> */}
         </div>
     )

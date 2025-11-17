@@ -80,7 +80,7 @@ export const signup = async (req, res) => {
     });
 
 
-    return res.status(201).json({ message: "Signup successful. Check your email to verify your account." });
+    return res.status(201).json({ message: "Signup successful. Check your email to verify your account before logging in." });
 
   } catch (err) {
     if (err?.code === 11000) {

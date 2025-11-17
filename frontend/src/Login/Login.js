@@ -12,6 +12,7 @@ function Login() {
             <LoginTitle/>
             <LoginGraphic/>
             <ShowBox/>
+            <a href="/quiz">Quiz</a>
         </div>
     )
 }
