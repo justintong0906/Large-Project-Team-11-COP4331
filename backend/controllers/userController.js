@@ -273,4 +273,79 @@ export const saveQuizResults = async (req, res) => {
   }
 };
 
+export const SendMatch = async (req, res) => {
+  try {
+    const callerId = req.userId;               // authenticated user
+    const targetId = req.params.id;            // user being matched with
+
+    if (!mongoose.isValidObjectId(targetId)) {
+      return res.status(400).json({ message: "Invalid target user id" });
+    }
+
+    if (callerId === targetId) {
+      return res.status(400).json({ message: "You cannot match with yourself." });
+    }
+
+    const caller = await User.findById(callerId)
+      .select("pendingMatches friends");
+    const target = await User.findById(targetId)
+      .select("pendingMatches friends");
+
+    if (!caller || !target) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // ------------------------------------------
+    // CASE 1: target already requested caller → MATCH!
+    // ------------------------------------------
+    const targetPending = target.pendingMatches.map(String);
+    if (targetPending.includes(callerId)) {
+
+      // Add each other to `friends` sets (no duplicates)
+      caller.friends.addToSet(targetId);
+      target.friends.addToSet(callerId);
+
+      // Remove target→caller pending request
+      target.pendingMatches = target.pendingMatches.filter(
+        (id) => id.toString() !== callerId
+      );
+
+      await caller.save();
+      await target.save();
+
+      return res.json({
+        message: "It's a match!",
+        matchedWith: targetId
+      });
+    }
+
+    // ------------------------------------------
+    // CASE 2: caller already sent a request before
+    // ------------------------------------------
+    const callerPending = caller.pendingMatches.map(String);
+    if (callerPending.includes(targetId)) {
+      return res.json({
+        message: "Match request already sent.",
+        pendingTo: targetId
+      });
+    }
+
+    // ------------------------------------------
+    // CASE 3: new pending request
+    // ------------------------------------------
+    caller.pendingMatches.push(targetId);
+    await caller.save();
+
+    return res.json({
+      message: "Match request sent.",
+      pendingTo: targetId
+    });
+
+  } catch (err) {
+    console.error("[SendMatch] error:", err);
+    return res.status(500).json({ message: "Failed to send match request." });
+  }
+};
+
+
 

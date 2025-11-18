@@ -3,6 +3,9 @@ import {requireAuth} from "../middleware/requireAuth.js"
 import { getUserProfile,getRandomCompatibleUser, saveQuizResults} from "../controllers/userController.js";
 const router = express.Router();
 
+router.post("/match/:id", requireAuth, SendMatch);
+
+
 router.get("/me", requireAuth, getUserProfile);
 router.get("/:id", requireAuth, getUserProfile);
 
