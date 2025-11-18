@@ -3,6 +3,8 @@
     justify-content: space-between; /* Adjusts the space between the flex items */
     width: 100%;
     padding: 0 4vw; /* Adds horizontal padding */;
+	white-space: pre-wrap;
+	font-family: 'Akkurat Mono', monospace;
 }
 
 .tab {
@@ -52,11 +54,6 @@
 	text-overflow :ellipsis; 
 	overflow :auto;
 	max-height :100%;
-}
-
-p {
-	white-space: pre-wrap;
-	font-family: 'Akkurat Mono', monospace;
 }
 
 .button-generic {
