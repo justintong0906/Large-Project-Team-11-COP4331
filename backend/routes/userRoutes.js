@@ -1,6 +1,8 @@
 import express from "express";
 import {requireAuth} from "../middleware/requireAuth.js"
 import { getUserProfile,getRandomCompatibleUser, saveQuizResults} from "../controllers/userController.js";
+import { SendMatch } from "../controllers/userController.js";
+
 const router = express.Router();
 
 router.post("/match/:id", requireAuth, SendMatch);

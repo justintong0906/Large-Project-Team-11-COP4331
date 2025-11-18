@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import crypto from "crypto";
-import { sendVerificationEmail } from "../services/mailer.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../services/mailer.js";
 
 
 const signToken = (user) =>
@@ -240,5 +240,83 @@ export const resendVerification = async (req, res) => {
     return res.status(500).json({ message: "Failed to resend." });
   }
 };
+
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+
+    if (!email) {
+      return res.status(400).json({ message: "Email required." });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Do not reveal if email exists
+    if (!user) {
+      return res.json({ message: "If that email exists, a reset email was sent." });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    user.passwordResetTokenHash = tokenHash;
+    user.passwordResetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+
+    await sendPasswordResetEmail({
+      to: email,
+      resetToken: token,
+    });
+
+    return res.json({ message: "If that email exists, a reset email was sent." });
+
+  } catch (err) {
+    console.error("[forgotPassword]", err);
+    res.status(500).json({ message: "Failed to send password reset email." });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body || {};
+
+    if (!token || !password) {
+      return res.status(400).json({ message: "Token and password required." });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters." });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      passwordResetTokenHash: tokenHash,
+      passwordResetTokenExpiresAt: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+
+    // set new password (assumes pre-save hashing)
+    user.password = password;
+
+    // clear reset fields
+    user.passwordResetTokenHash = undefined;
+    user.passwordResetTokenExpiresAt = undefined;
+
+    await user.save();
+
+    return res.json({ message: "Password reset successful." });
+
+  } catch (err) {
+    console.error("[resetPassword]", err);
+    res.status(500).json({ message: "Failed to reset password." });
+  }
+};
+
+
 
 

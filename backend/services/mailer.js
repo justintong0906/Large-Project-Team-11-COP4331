@@ -59,3 +59,20 @@ export async function verifyMailerConnection() {
     console.error("❌ Resend API check failed:", err.message);
   }
 }
+
+export async function sendPasswordResetEmail({ to, resetToken }) {
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+  await resend.emails.send({
+    from: process.env.MAIL_FROM,
+    to,
+    subject: "Reset your password",
+    html: `
+      <h2>Password Reset Request</h2>
+      <p>Click below to reset your password:</p>
+      <p><a href="${resetUrl}">${resetUrl}</a></p>
+      <p>This link is valid for 15 minutes.</p>
+    `
+  });
+}
+

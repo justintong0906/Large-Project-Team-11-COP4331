@@ -27,6 +27,9 @@ const userSchema = new mongoose.Schema(
     emailVerifyTokenHash: { type: String, index: true },
     emailVerifyTokenExpiresAt: { type: Date },
 
+    passwordResetTokenHash: { type: String, index: true },
+    passwordResetTokenExpiresAt: { type: Date },
+
 
     questionnaireBitmask: { type: Number, default: 0 },
 
