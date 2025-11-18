@@ -18,29 +18,28 @@ function Dashboard() {
       }
   }, [navigate]);
 
-
   //send user to quiz if they havent completed it
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token");
-  //   if (token) {
-  //       fetch(`${API_BASE}/users/me`, {
-  //           method: "GET",
-  //           headers: {
-  //               "Content-Type": "application/json",
-  //               "Authorization": `Bearer ${token}`
-  //           }
-  //       })
-  //       .then(response => response.json())
-  //       .then(data => {
-  //           if (!data.firstName) { // if first name doesn't exist, they never completed their quiz
-  //               navigate("/quiz");
-  //           }
-  //       })
-  //       .catch(error => {
-  //           console.error("Error fetching quiz status:", error);
-  //       });
-  //   }
-  // }, [navigate]);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+        fetch(`${API_BASE}/users/me`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.gender) { // if gender doesn't exist, they never completed their quiz
+                navigate("/quiz");
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching quiz status:", error);
+        });
+    }
+  }, [navigate]);
 
 
   return (

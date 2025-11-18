@@ -17,6 +17,30 @@ function Quiz(){
     }, [navigate]);
 
 
+    //send user to dashboard if already did quiz
+    useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+        fetch(`${API_BASE}/users/me`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.gender) { // if gender exists, they already completed their quiz
+                navigate("/");
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching quiz status:", error);
+        });
+    }
+  }, [navigate]);
+
+
     // changing pfp
     const [imageBase64, setImageBase64] = useState("/default-pfp.png");
     
@@ -42,6 +66,7 @@ function Quiz(){
     //error for empty
     const [error, setError] = useState("");
     const handleSubmit = async () => {
+        console.log("got here")
         const imageString = imageBase64;
         const firstName = document.getElementById("firstName").value;
         const lastName = document.getElementById("lastName").value;
@@ -61,7 +86,7 @@ function Quiz(){
         if (splits.includes("any") || splits.includes("other")) {
             splits = ["ppl", "arnold", "brosplit"];
         }
-        //USE LATER: const otherSplit = showOtherSplit ? document.getElementById("otherSplit").value : "Any";
+        const otherSplit = showOtherSplit ? document.getElementById("otherSplit").value : "Any";
 
 
             //if missing required * fields
@@ -92,6 +117,7 @@ function Quiz(){
                         days,   //
                         times,  //
                         splits  //
+                        //maybe add "otherSplit?"
                     })
                 });
 
@@ -114,7 +140,7 @@ function Quiz(){
             <h1 class="Title">User Quiz</h1>
             <div class="CenterQuiz">
                 <p>
-                    <img id="image" class="Image" src={imageBase64} alt="profile-picture"></img><br/>
+                    <img id="image" class="QuizImage" src={imageBase64} alt="profile-picture"></img><br/>
                     <input id="imageInput" type="file" accept="image/*" onChange={handleImageChange} style={{display: 'none'}}/>
                     <button class="Center ButtonPfp" onClick={() => document.getElementById('imageInput').click()}>Change Profile Picture</button>
                 </p>
