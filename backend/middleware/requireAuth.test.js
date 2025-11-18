@@ -6,19 +6,19 @@ const mockRes = () => ({
 });
 
 describe('requireAuth middleware', () => {
-  test('should reject missing auth header', async () => {
+  test('rejects missing auth header', async () => {
     const res = mockRes();
     await requireAuth({ headers: {} }, res, () => {});
     expect(res.statusCode).toBe(401);
   });
 
-  test('should reject invalid Bearer format', async () => {
+  test('rejects header with improper JSON format', async () => {
     const res = mockRes();
     await requireAuth({ headers: { authorization: 'InvalidFormat' } }, res, () => {});
     expect(res.statusCode).toBe(401);
   });
 
-  test('should reject empty token', async () => {
+  test('rejects header if no token token', async () => {
     const res = mockRes();
     await requireAuth({ headers: { authorization: 'Bearer ' } }, res, () => {});
     expect(res.statusCode).toBe(401);
