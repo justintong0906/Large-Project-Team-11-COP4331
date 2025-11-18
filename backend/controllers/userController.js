@@ -195,6 +195,7 @@ export const saveQuizResults = async (req, res) => {
       photo,
       yearsOfExperience,
       genderPreferences, // "coed" | "single_gender" | "no_preference"
+      phone,
     } = req.body?.profile ?? {};
 
     // Build $set only with provided/allowed fields
@@ -225,10 +226,12 @@ export const saveQuizResults = async (req, res) => {
     if (!inEnum(genderPreferences, ["coed", "single_gender", "no_preference"])) {
       return res.status(400).json({ message: "genderPreferences invalid" });
     }
+    if (!strMax(phone, 30)) {
+       res.status(400).json({ message: "phone too long (max 30)" });
+    }
 
     // Pack allowed fields if present
     pushIfDefined("name", typeof name === "string" ? name.trim() : name);
-
     pushIfDefined("age", age);
     pushIfDefined("gender", gender);
     pushIfDefined("major", typeof major === "string" ? major.trim() : major);
@@ -236,6 +239,7 @@ export const saveQuizResults = async (req, res) => {
     pushIfDefined("photo", typeof photo === "string" ? photo.trim() : photo);
     pushIfDefined("yearsOfExperience", yearsOfExperience);
     pushIfDefined("genderPreferences", genderPreferences);
+    pushIfDefined("phone", typeof phone === "string" ? phone.trim() : phone);
 
     // Final update document
     const updateDoc = {

@@ -11,6 +11,7 @@ const profileSchema = new mongoose.Schema(
     photo: { type: String, trim: true }, // URL (optional). If you use Cloudinary/S3 later, you can store an object here.
     yearsOfExperience: { type: Number, min: 0, max: 100 },
     genderPreferences: { type: String, enum: ["coed", "single_gender", "no_preference"], default: "no_preference" },
+    phone: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -30,6 +31,7 @@ const userSchema = new mongoose.Schema(
     questionnaireBitmask: { type: Number, default: 0 },
 
     profile: { type: profileSchema, default: {} },
+
 
 
     pendingMatches: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
