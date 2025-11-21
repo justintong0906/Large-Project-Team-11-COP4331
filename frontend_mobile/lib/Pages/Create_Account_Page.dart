@@ -1,0 +1,324 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv directly
+import '../Styled accessories/styled_body_text.dart';
+import '../Styled accessories/styled_header_text.dart';
+import 'Email_Verification_Pending_Page.dart';
+
+class CreateAccountPage extends StatefulWidget {
+  const CreateAccountPage({super.key});
+
+  @override
+  State<CreateAccountPage> createState() => _CreateAccountPageState();
+}
+
+class _CreateAccountPageState extends State<CreateAccountPage> {
+  // Text editing controllers
+  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  // State variables
+  bool _isLoading = false;
+  String _errorMessage = '';
+
+  // API URL initialized directly from dotenv
+  final String _apiUrl = '${dotenv.env['API_BASE_URL']}/api/auth/signup';
+
+  @override
+  void dispose() {
+    // Clean up controllers
+    usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signupUser() async {
+    // 1. Basic Client-Side Validation
+    if (passwordController.text.trim() !=
+        confirmPasswordController.text.trim()) {
+      setState(() {
+        _errorMessage = "Passwords do not match.";
+      });
+      return;
+    }
+
+    // 2. Reset state and show loading spinner
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      // 3. Make API Request
+      final response = await http.post(
+        Uri.parse(_apiUrl), // Use the directly initialized URL
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "username": usernameController.text.trim(),
+          "email": emailController.text.trim(),
+          "password": passwordController.text.trim(),
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      // 4. Handle Response
+      if (response.statusCode == 201) {
+        // --- SUCCESSFUL SIGNUP ---
+        if (!mounted) return;
+        // Navigate to the verification page so they can verify their email
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EmailVerificationPendingPage(
+              email: emailController.text.trim(),
+            ),
+          ),
+        );
+      } else {
+        // --- SERVER ERRORS (e.g., Email already exists) ---
+        setState(() {
+          _errorMessage = data['message'] ?? 'Signup failed.';
+        });
+      }
+    } catch (e) {
+      print("Signup Error: $e");
+      // --- CONNECTION ERRORS ---
+      setState(() {
+        _errorMessage =
+            'Could not connect to the server. Please check your internet and .env configuration.';
+      });
+    }
+
+    // 5. Stop loading spinner (if still on this screen)
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      extendBodyBehindAppBar: true,
+      // --- Background Gradient ---
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomRight,
+            colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const SizedBox(height: 80),
+            // --- Header Text ---
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const <Widget>[
+                  StyledHeaderText(
+                    'Create Account',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  SizedBox(height: 10),
+                  StyledBodyText(
+                    "Join us and find your gym buddy!",
+                    fontWeight: FontWeight.normal,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+            // --- White Container Block ---
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(60),
+                    topRight: Radius.circular(60),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(30),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        const SizedBox(height: 30),
+                        // --- Input Fields Container ---
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color.fromARGB(255, 226, 226, 226),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: <Widget>[
+                              // --- Username Input ---
+                              _buildInputField(
+                                controller: usernameController,
+                                hintText: 'Username',
+                                icon: Icons.person_outline,
+                              ),
+                              // --- Email Input ---
+                              _buildInputField(
+                                controller: emailController,
+                                hintText: 'Email',
+                                icon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+                              // --- Password Input ---
+                              _buildInputField(
+                                controller: passwordController,
+                                hintText: 'Password',
+                                icon: Icons.lock_outline,
+                                obscureText: true,
+                              ),
+                              // --- Confirm Password Input ---
+                              _buildInputField(
+                                controller: confirmPasswordController,
+                                hintText: 'Confirm Password',
+                                icon: Icons.lock_outline,
+                                obscureText: true,
+                                isLast: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+
+                        // --- Error Message Display ---
+                        if (_errorMessage.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 20.0),
+                            child: Text(
+                              _errorMessage,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                        // --- Signup Button ---
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[800],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                            ),
+                            // Disable button while loading
+                            onPressed: _isLoading ? null : _signupUser,
+                            child: _isLoading
+                                // Show loading spinner if loading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                // Show text otherwise
+                                : const Text(
+                                    'Sign Up',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // --- Back to Login Link ---
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Already have an account? ",
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Text(
+                                "Login",
+                                style: TextStyle(
+                                  color: Colors.red[800],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper function to build consistent input fields
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey.shade600),
+          border: InputBorder.none,
+          prefixIcon: Icon(icon, color: Colors.red[300]),
+        ),
+      ),
+    );
+  }
+}
