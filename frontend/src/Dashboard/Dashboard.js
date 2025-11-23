@@ -31,7 +31,7 @@ function Dashboard() {
         })
         .then(response => response.json())
         .then(data => {
-            if (!data.gender) { // if gender doesn't exist, they never completed their quiz
+            if (!data.profile.gender) { // if gender doesn't exist, they never completed their quiz
                 navigate("/quiz");
             }
         })

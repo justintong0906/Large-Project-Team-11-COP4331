@@ -201,7 +201,9 @@ export const saveQuizResults = async (req, res) => {
     // Build $set only with provided/allowed fields
     const profileSet = {};
     const pushIfDefined = (key, value, test = (v) => v !== undefined) => {
-      if (test(value)) profileSet[`profile.${key}`] = value;
+      console.log("key:", key,"\nvalue:", value,"\ntest(value):", test(value));
+      if (test(value)) 
+        profileSet[`profile.${key}`] = value;
     };
 
     // Basic validations mirroring your schema constraints
@@ -231,6 +233,9 @@ export const saveQuizResults = async (req, res) => {
     }
 
     // Pack allowed fields if present
+    console.log(req.body);
+    console.log(gender);
+
     pushIfDefined("name", typeof name === "string" ? name.trim() : name);
     pushIfDefined("age", age);
     pushIfDefined("gender", gender);

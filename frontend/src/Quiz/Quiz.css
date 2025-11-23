@@ -170,3 +170,16 @@ textarea.textbox{
 .ButtonSubmit:hover{
     background-color: #5688b1;
 }
+
+
+.LogoutButton{
+    position: absolute;
+    right: 3%;
+    color:#506594;
+    cursor: pointer;
+    font-size: 15pt;
+    transition: 0.2s;
+}
+.LogoutButton:hover{
+    color:#a5b3d0;
+}

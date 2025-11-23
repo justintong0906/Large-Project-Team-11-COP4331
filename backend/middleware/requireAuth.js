@@ -27,7 +27,8 @@ export const requireAuth = async (req, res, next) => {
       return res.status(401).json({ message: "User not found." });
     }
 
-    req.user = user; // so controllers can access req.user.id
+    req.user = user;
+    req.userId = user._id;
     next();
   } catch (err) {
     console.error("[requireAuth] error:", err.message);
