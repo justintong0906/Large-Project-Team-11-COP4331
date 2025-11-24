@@ -43,11 +43,12 @@ function Dashboard() {
 
 
   return (
-    <div>
+    <div style={{'background-color':'#393a30'}}>
       <SideTab />
       <CenterTab />
       {/* <Footer /> */}
-    </div>
+	  <div style={{'width':'100vw', 'height':'100vh', 'background-color':'#ccc'}} />
+	</div>
   );
 }
 
