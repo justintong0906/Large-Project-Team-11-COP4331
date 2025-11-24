@@ -75,8 +75,7 @@ function Quiz(){
     const handleSubmit = async () => {
         console.log("got here")
         const photo = imageBase64;
-        const firstName = document.getElementById("firstName").value;
-        const lastName = document.getElementById("lastName").value;
+        const name = document.getElementById("name").value;
         const bio = document.getElementById("bio").value;
         const phone = document.getElementById("phone").value;
         const gender = document.getElementById("genderSelect").value;
@@ -90,15 +89,13 @@ function Quiz(){
         let splits = Array.from(document.querySelectorAll('input[name="workoutSplit"]:checked')).map(input => input.value);
         
 
-        // If "any" or "other" is selected send all splits (for bitmasking)
-        if (splits.includes("any") || splits.includes("other")) {
+        // If "any" is selected send all splits (for bitmasking)
+        if (splits.includes("any")) {
             splits = ["ppl", "arnold", "brosplit"]; 
         }
-        const otherSplit = showOtherSplit ? document.getElementById("otherSplit").value : "Any";
-
 
             //if missing required * fields
-        if(firstName=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0){
+        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0){
             setError("Please fill out required fields indicated by *");
         }
             //send info
@@ -107,8 +104,7 @@ function Quiz(){
                 const bodyData = {
                     profile: {
                         photo,
-                        firstName,
-                        lastName,
+                        name,
                         bio,
                         phone,
                         gender,
@@ -163,8 +159,7 @@ function Quiz(){
                 </p>
 
                 <h2 class="tbHeader">Primary Information</h2>
-                <p class="tbLabel">First Name*</p>   <input id="firstName" class="textbox" placeholder="First Name" maxLength="100"></input><br/>
-                <p class="tbLabel">Last Name</p>    <input id="lastName" class="textbox" placeholder="Last Name" maxLength="100"></input><br/>
+                <p class="tbLabel">Name*</p>   <input id="name" class="textbox" placeholder="Name" maxLength="100"></input><br/>
                 <p class="tbLabel">Bio</p>          <textarea id="bio" class="textbox" placeholder="Bio" rows="3" maxLength="500"></textarea><br/>
                 <p class="tbLabel">Phone Number</p>   <input id="phone" type="tel" class="textbox" placeholder="Phone Number" maxLength="15" pattern="[0-9]*" onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}></input><br/>
 
@@ -227,10 +222,7 @@ function Quiz(){
                     <label for="brosplit">Bro Split</label>
                     <input type="radio" id="any" name="workoutSplit" value="any" onChange={handleSplitChange}/>
                     <label for="any">Any</label>
-                    <input type="radio" id="other" name="workoutSplit" value="other" onChange={handleSplitChange}/>
-                    <label for="other">Other</label>
                 </div>
-                {showOtherSplit && <input id="otherSplit" class="textbox" placeholder="Specify your workout split" maxLength="100"></input>}             
                 
                 {error && <p style={{color:"red", textAlign:"center"}}>{error}</p>}       
                 {success && <p style={{color:"green", textAlign:"center"}}>{success}</p>}                         

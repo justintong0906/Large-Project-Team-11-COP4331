@@ -1,5 +1,7 @@
 import "./Friends.css"
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+const API_BASE = process.env.REACT_APP_API_BASE;
 
 // function Friends() {
 //     return (
@@ -19,12 +21,12 @@ import { useState, useEffect } from "react";
 
 
 function Friends() {
+    //get current profile friends
     const [friends, setFriends] = useState([]);
-
     useEffect(() => {
         const fetchFriends = async () => {
             const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:5001/api/friends", {
+            const res = await fetch(`${API_BASE}/users/me`, {
                 headers: {"Authorization": `Bearer ${token}`}
             });
             const data = await res.json();
@@ -35,13 +37,22 @@ function Friends() {
 
     return (
         <div className="FriendsTab Grid">
-            {friends.map(friend => (
-                <div class="GridItem" key={friend._id}>
-                    <img src={friend.profilePicture} class="Image"/>
-                    <h2 class="Name">{friend.username}</h2>
-                </div>
-            ))}
-        </div>			
+            {friends.length === 0 ? (
+                <div>No friends found</div>
+            ) : (
+                friends.map(friend => (
+                <Link
+                    to={`/friends/${friend._id}`}
+                    key={friend._id}
+                    className="GridItem LinkReset"
+                >
+                    <img src={friend.profile?.photo} className="Image" alt={`${friend.username} profile picture`} />
+                    <h3 className="Name">{friend.profile?.name}</h3>
+                    <h4 className="Username">{friend.username}</h4>
+                </Link>
+                ))
+            )}
+        </div>            
     )
 }
 

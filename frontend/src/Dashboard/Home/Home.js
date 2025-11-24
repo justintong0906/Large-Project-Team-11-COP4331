@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import "./Home.css"
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -176,6 +176,71 @@ function Home() {
             setDecodedData(decoded);
         }
     }, [randomUser]);
+
+	
+	//hardcode//
+	return (
+		<div className="tabs-container">
+			
+			{/* RIGHT TAB */}
+			<div 
+				id="righttab" 
+				className="tab" 
+				style={{ position: "absolute", right: "40px", textAlign: "left" }}
+			>
+				<div style={{ backgroundColor: "#336", padding: "20px", borderRadius: "10px", color: "white" }}>
+					<center>
+						<h2>Biography</h2>
+						<div className="internal_container">
+							<p className="text_box">
+								<span className="fake_tab"></span>
+								Hi! I'm a Junior majoring in Kinesiology. I usually hit the gym around 5 PM...
+							</p>
+						</div>
+					</center>
+					<p>Splits: Push/Pull/Legs</p>
+					<p>Days Available: Mon, Wed, Fri</p>
+					<p>Experience: 3 years</p>
+					<button 
+						className="button-generic" 
+						style={{ backgroundColor: "#393", right: "20px" }}
+					>
+						Accept Match
+					</button>
+				</div>
+			</div>
+
+			{/* LEFT TAB */}
+			<div 
+				id="lefttab" 
+				className="tab" 
+				style={{ position: "absolute", left: "40px", textAlign: "left" }}
+			>
+				<div style={{ backgroundColor: "#633", padding: "20px", borderRadius: "10px", color: "white" }}>
+					<center>
+						<h2 style={{ color: "#333" }}>.</h2>
+						<img 
+							src="https://placehold.co/200" 
+							className="internal_container" 
+							alt="profile"
+							style={{ position: "relative", objectFit: "contain" }} 
+						/>
+						<br/><br/>
+						<h3><b>USERNAME: </b>gym_rat_99</h3>
+						<h3><b>AGE: </b>22</h3>
+						<button 
+							className="button-generic" 
+							style={{ backgroundColor: "#933", left: "20px" }}
+						>
+							Decline Match
+						</button>
+					</center>
+				</div>
+			</div>
+
+		</div>
+	);
+	////
 	
 	if (error) {
 		return <div>Error: {error}</div>;

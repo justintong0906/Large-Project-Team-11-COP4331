@@ -14,7 +14,8 @@ export const getUserProfile = async (req, res) => {
     }
 
     const user = await User.findById(id)
-      .select("-password -emailVerifyTokenHash -emailVerifyTokenExpiresAt");
+      .select("-password -emailVerifyTokenHash -emailVerifyTokenExpiresAt")
+      .populate("friends", "_id username profile"); // added to convert friendIds to objects of their profiles
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

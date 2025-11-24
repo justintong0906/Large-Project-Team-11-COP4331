@@ -34,5 +34,13 @@
 }
 
 .Name{
+    margin-bottom: -10px;
+}
+.Username{
+    color: gray;
+}
 
+.LinkReset { 
+    text-decoration: none; 
+    color: inherit; 
 }
