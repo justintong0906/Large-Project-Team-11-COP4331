@@ -1,10 +1,10 @@
+// lib/Pages/quiz_page.dart
+
 import 'package:flutter/material.dart';
+import 'main_dashboard_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../Styled accessories/styled_body_text.dart';
-import '../Styled accessories/styled_header_text.dart';
-import 'Main_Dashboard_Page.dart';
 
 class QuizPage extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -15,250 +15,417 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  final _formKey = GlobalKey<FormState>();
+  int currentPage = 0;
   bool _isLoading = false;
-  String _errorMessage = '';
 
-  // --- Form Controllers & State ---
+  // --- Page 1-3 State (Checkboxes) ---
+  List<bool> workoutDays = List.generate(7, (_) => false); // Mon–Sun
+  // "Other" is added, so this is now 4 items
+  List<bool> splitOptions = [
+    false,
+    false,
+    false,
+    false,
+  ]; // Push/Pull/Leg, Arnold, Bro, Other
+  List<bool> timeOptions = [false, false, false]; // Morning, Afternoon, Evening
+
+  // --- Page 4-6 State (Profile) ---
+  final _ageController = TextEditingController();
+  final _majorController = TextEditingController();
+  final _expController = TextEditingController();
   final _bioController = TextEditingController();
-  String? _selectedGender;
-  int _age = 18;
+  String? _gender;
+  String? _genderPreference;
 
-  // --- Bitmask & Checkbox State ---
-  int _questionnaireBitmask = 0;
-  final Map<int, bool> _workoutTypes = {
-    1: false, // Cardio
-    2: false, // Strength
-    4: false, // Flexibility
-    8: false, // HIIT
-    16: false, // Sports
-  };
+  // Titles for each page
+  final List<String> pageTitles = [
+    "What days do you usually work out?", // Page 0
+    "What is your workout split?", // Page 1
+    "What time of day do you usually work out?", // Page 2
+    "Tell us about yourself", // Page 3
+    "What are your preferences?", // Page 4
+    "Write a short bio", // Page 5
+  ];
 
   @override
   void dispose() {
+    _ageController.dispose();
+    _majorController.dispose();
+    _expController.dispose();
     _bioController.dispose();
     super.dispose();
   }
 
-  // Update bitmask when a checkbox is toggled
-  void _updateBitmask(int value, bool isChecked) {
+  // --- Select All Function ---
+  void toggleSelectAll(List<bool> options) {
+    // Check if all are selected, except for "Other" if it's the splits page
+    bool allSelected = options.every((o) => o);
+    if (currentPage == 1) {
+      // Special case for splits
+      allSelected = options.take(3).every((o) => o);
+    }
+
     setState(() {
-      _workoutTypes[value] = isChecked;
-      if (isChecked) {
-        _questionnaireBitmask |= value; // Set bit
-      } else {
-        _questionnaireBitmask &= ~value; // Clear bit
+      for (int i = 0; i < options.length; i++) {
+        // Don't toggle "Other"
+        if (currentPage == 1 && i == 3) {
+          options[i] = false;
+        } else {
+          options[i] = !allSelected;
+        }
       }
     });
   }
 
-  // --- API Call: Submit Quiz ---
-  Future<void> _submitQuiz() async {
-    if (!_formKey.currentState!.validate()) return;
+  // --- API Save Function (Updated) ---
+  Future<void> _saveQuizData() async {
+    setState(() => _isLoading = true);
 
-    // Validation for gender and workout types
-    if (_selectedGender == null) {
-      setState(() => _errorMessage = "Please select your gender.");
-      return;
-    }
-    if (_questionnaireBitmask == 0) {
-      setState(
-        () => _errorMessage = "Please select at least one workout type.",
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
-
-    final String apiUrl = '${dotenv.env['API_BASE_URL']}/api/users/profile';
-    // We need the token to make this request. For now, we'll assume it's saved
-    // in a secure storage. In a real app, you'd retrieve it here.
-    // final token = await SecureStorage.getToken();
-    // For this example, we will skip the token header, but your backend will need it.
+    // 1. Simulate a 1-second network delay
+    await Future.delayed(const Duration(seconds: 1));
 
     try {
-      final response = await http.put(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          // 'Authorization': 'Bearer $token', // Add your token here
-        },
-        body: jsonEncode({
-          'userId': widget.userData['_id'], // Pass user ID
-          'bio': _bioController.text.trim(),
-          'age': _age,
-          'gender': _selectedGender,
-          'questionnaireBitmask': _questionnaireBitmask,
-        }),
+      // 2. Get the selected quiz answers
+      final List<String> dayLabels = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
+      final List<String> splitLabels = [
+        "Push/Pull/Leg",
+        "Arnold Split",
+        "Bro Split",
+        "Other",
+      ];
+      final List<String> timeLabels = ["Morning", "Afternoon", "Evening"];
+
+      final selectedDays = dayLabels
+          .where((day) => workoutDays[dayLabels.indexOf(day)])
+          .toList();
+      final selectedSplits = splitLabels
+          .where((split) => splitOptions[splitLabels.indexOf(split)])
+          .toList();
+      final selectedTimes = timeLabels
+          .where((time) => timeOptions[timeLabels.indexOf(time)])
+          .toList();
+
+      // 3. Update the local userData object with the new data
+      // (This will make your ProfilePage work!)
+      widget.userData['workoutDays'] = selectedDays;
+      widget.userData['workoutSplits'] = selectedSplits;
+      widget.userData['workoutTimes'] = selectedTimes;
+      widget.userData['hasCompletedQuiz'] = true; // Mark as "completed"
+
+      // Also save the profile data
+      widget.userData['profile'] = {
+        'age': int.tryParse(_ageController.text),
+        'gender': _gender,
+        'major': _majorController.text.trim(),
+        'bio': _bioController.text.trim(),
+        'yearsOfExperience': int.tryParse(_expController.text),
+        'genderPreferences': _genderPreference,
+      };
+
+      // 4. Navigate to the dashboard (no API call needed)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainDashboardPage(userData: widget.userData),
+        ),
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final updatedUser = data['user'];
-
-        // Navigate to Dashboard with updated user data
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainDashboardPage(userData: updatedUser),
-          ),
-        );
-      } else {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _errorMessage = data['message'] ?? 'Failed to submit quiz.';
-        });
-      }
     } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
+    }
+
+    setState(() => _isLoading = false);
+  }
+
+  // --- Navigation Functions ---
+  void nextPage() {
+    if (currentPage < 5) {
       setState(() {
-        _errorMessage = 'Could not connect to the server.';
+        currentPage++;
+      });
+    } else {
+      _saveQuizData();
+    }
+  }
+
+  void prevPage() {
+    if (currentPage > 0) {
+      setState(() {
+        currentPage--;
       });
     }
-    setState(() => _isLoading = false);
+  }
+
+  // --- STYLING (Removed white text) ---
+  final kOptionStyle = const TextStyle(color: Colors.black, fontSize: 16);
+  final kLabelStyle = const TextStyle(
+    color: Colors.black,
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+  );
+
+  // --- Widget Builders for Each Page ---
+
+  Widget buildCheckboxList(
+    List<String> labels,
+    List<bool> options, {
+    bool showSelectAll = false,
+  }) {
+    return Column(
+      children: [
+        ...List.generate(labels.length, (index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: CheckboxListTile(
+              title: Text(labels[index], style: kOptionStyle),
+              value: options[index],
+              onChanged: (val) {
+                setState(() {
+                  options[index] = val ?? false;
+                });
+              },
+              activeColor: Colors.red[700],
+              checkColor: Colors.white,
+              tileColor: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+          );
+        }),
+        if (showSelectAll) // <-- Show "Select All" button
+          Padding(
+            padding: const EdgeInsets.only(top: 10.0),
+            child: ElevatedButton(
+              onPressed: () => toggleSelectAll(options),
+              child: Text("Select All"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[700],
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget buildRadioList(
+    List<String> labels,
+    String? groupValue,
+    ValueChanged<String?> onChanged,
+  ) {
+    return Column(
+      children: labels.map((label) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: RadioListTile<String>(
+            title: Text(label, style: kOptionStyle),
+            value: label,
+            groupValue: groupValue,
+            onChanged: onChanged,
+            activeColor: Colors.red[700],
+            tileColor: Colors.grey.shade100,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget buildTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: kOptionStyle, // <-- Use kOptionStyle
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.grey.shade700),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildBioField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        style: kOptionStyle,
+        maxLines: 5,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.grey.shade700),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget pageContent;
+
+    // --- Page 0: Days ---
+    if (currentPage == 0) {
+      pageContent = buildCheckboxList(
+        [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+        workoutDays,
+        showSelectAll: true, // <-- ADDED
+      );
+      // --- Page 1: Splits ---
+    } else if (currentPage == 1) {
+      pageContent = buildCheckboxList(
+        [
+          "Push/Pull/Leg",
+          "Arnold Split",
+          "Bro Split",
+          "Other",
+        ], // <-- ADDED "Other"
+        splitOptions,
+        showSelectAll: true, // <-- ADDED
+      );
+      // --- Page 2: Times ---
+    } else if (currentPage == 2) {
+      pageContent = buildCheckboxList([
+        "Morning",
+        "Afternoon",
+        "Evening",
+      ], timeOptions);
+      // --- Page 3: Profile Info ---
+    } else if (currentPage == 3) {
+      pageContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Your Gender", style: kLabelStyle),
+          buildRadioList(
+            ["male", "female", "nonbinary", "other", "prefer not to say"],
+            _gender,
+            (value) => setState(() => _gender = value),
+          ),
+          const SizedBox(height: 20),
+          buildTextField(
+            _ageController,
+            "Age",
+            keyboardType: TextInputType.number,
+          ),
+          buildTextField(_majorController, "Major"),
+          // --- UPDATED LABEL ---
+          buildTextField(
+            _expController,
+            "How long have you been working out? (in years)",
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      );
+      // --- Page 4: Gender Preferences ---
+    } else if (currentPage == 4) {
+      pageContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Workout Partner Gender Preference", style: kLabelStyle),
+          buildRadioList(
+            ["coed", "single_gender", "no_preference"],
+            _genderPreference,
+            (value) => setState(() => _genderPreference = value),
+          ),
+        ],
+      );
+      // --- Page 5: Bio ---
+    } else {
+      pageContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Your Bio", style: kLabelStyle),
+          const SizedBox(height: 10),
+          buildBioField(_bioController, "Tell your future gym buddies..."),
+        ],
+      );
+    }
+
+    // --- BUILD SCAFFOLD (Gradient Removed) ---
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Setup Your Profile"),
-        backgroundColor: Colors.red[800],
-        elevation: 0,
+        title: Text(
+          pageTitles[currentPage],
+        ), // <-- Removed white text, will use default theme
+        centerTitle: true,
+        backgroundColor: Colors.white, // <-- Set to solid color
+        elevation: 1, // <-- Add a slight shadow
+        iconTheme: IconThemeData(
+          color: Colors.black,
+        ), // <-- Make back button black
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
+      backgroundColor: Colors.white, // <-- Set background to solid white
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const StyledHeaderText("Tell Us About Yourself", fontSize: 24),
-              const SizedBox(height: 20),
-
-              // --- Bio ---
-              TextFormField(
-                controller: _bioController,
-                decoration: const InputDecoration(
-                  labelText: 'Short Bio',
-                  border: OutlineInputBorder(),
-                  hintText: 'I love lifting and running...',
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a short bio.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // --- Age & Gender ---
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<int>(
-                      value: _age,
-                      decoration: const InputDecoration(
-                        labelText: 'Age',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: List.generate(83, (index) => index + 18)
-                          .map(
-                            (age) => DropdownMenuItem(
-                              value: age,
-                              child: Text(age.toString()),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) => setState(() => _age = value!),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedGender,
-                      decoration: const InputDecoration(
-                        labelText: 'Gender',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: ['Male', 'Female', 'Other']
-                          .map(
-                            (gender) => DropdownMenuItem(
-                              value: gender.toLowerCase(),
-                              child: Text(gender),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedGender = value),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-
-              // --- Workout Types (Bitmask) ---
-              const StyledHeaderText(
-                "What are your workout interests?",
-                fontSize: 18,
-              ),
-              const SizedBox(height: 10),
-              ..._workoutTypes.entries.map((entry) {
-                final name = {
-                  1: 'Cardio (Running, Cycling)',
-                  2: 'Strength Training (Lifting)',
-                  4: 'Flexibility (Yoga, Pilates)',
-                  8: 'HIIT / Crossfit',
-                  16: 'Sports (Basketball, Soccer, etc.)',
-                }[entry.key]!;
-
-                return CheckboxListTile(
-                  title: Text(name),
-                  value: entry.value,
-                  activeColor: Colors.red[800],
-                  onChanged: (bool? value) {
-                    _updateBitmask(entry.key, value!);
-                  },
-                );
-              }).toList(),
-
-              const SizedBox(height: 30),
-
-              // --- Error Message ---
-              if (_errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0),
-                  child: Text(
-                    _errorMessage,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-              // --- Submit Button ---
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[800],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  onPressed: _isLoading ? null : _submitQuiz,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Complete Profile',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+            children: [
+              Expanded(child: SingleChildScrollView(child: pageContent)),
+              if (_isLoading)
+                const CircularProgressIndicator(color: Colors.red)
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (currentPage > 0)
+                      ElevatedButton(
+                        onPressed: prevPage,
+                        child: const Text("Back"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade300,
+                          foregroundColor: Colors.black,
                         ),
+                      ),
+                    if (currentPage == 0) // Placeholder
+                      Container(),
+                    ElevatedButton(
+                      onPressed: nextPage,
+                      child: Text(currentPage == 5 ? "Save & Finish" : "Next"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[700],
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
             ],
           ),
         ),

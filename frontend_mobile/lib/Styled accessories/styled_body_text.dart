@@ -11,8 +11,8 @@ class StyledBodyText extends StatelessWidget {
     this.text, {
     super.key,
     this.color,
-    this.fontSize = 16.0, // Default size for body text
-    this.fontWeight = FontWeight.normal, // Default weight for body text
+    this.fontSize = 16.0,
+    required this.fontWeight, // <--- Now Required
     this.textAlign,
   });
 
@@ -23,7 +23,7 @@ class StyledBodyText extends StatelessWidget {
       textAlign: textAlign,
       style: TextStyle(
         // Use the provided color, or fall back to a dark grey if null
-        color: color ?? Colors.grey[800],
+        color: color ?? Colors.white,
         fontSize: fontSize,
         fontWeight: fontWeight,
       ),

@@ -1,7 +1,10 @@
+// lib/Pages/forgot_password_page.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../Styled accessories/styled_body_text.dart';
 import '../Styled accessories/styled_header_text.dart';
 
@@ -18,74 +21,62 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   String _message = '';
   bool _isError = false;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  // --- API Call: Request Password Reset ---
   Future<void> _sendResetLink() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      setState(() {
-        _message = 'Please enter your email address.';
-        _isError = true;
-      });
-      return;
-    }
-
     setState(() {
       _isLoading = true;
       _message = '';
       _isError = false;
     });
 
-    // This endpoint doesn't exist in your backend yet, but this is
-    // where you would point it once you build it.
+    // TODO: Your backend needs this endpoint: POST /api/auth/forgot-password
     final String apiUrl =
         '${dotenv.env['API_BASE_URL']}/api/auth/forgot-password';
 
     try {
-      // --- MOCK API CALL (Replace with real call later) ---
-      // Since your backend doesn't have this route, we'll simulate a successful call.
-      //
-      // final response = await http.post(
-      //   Uri.parse(apiUrl),
-      //   headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      //   body: jsonEncode({'email': email}),
-      // );
-      //
-      // if (response.statusCode == 200) {
-      //   final data = jsonDecode(response.body);
-      //   setState(() {
-      //     _message = data['message'] ?? 'Reset link sent to your email.';
-      //     _isError = false;
-      //   });
-      //   _emailController.clear(); // Clear the field on success
-      // } else { ...handle error... }
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({'email': _emailController.text.trim()}),
+      );
 
-      // --- SIMULATED SUCCESS ---
-      await Future.delayed(const Duration(seconds: 2)); // Fake network delay
-      setState(() {
-        _message =
-            'If an account exists for $email, a reset link has been sent.';
-        _isError = false;
-      });
-      _emailController.clear();
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        // Success
+        setState(() {
+          _message =
+              data['message'] ??
+              'If an account exists for this email, a reset link has been sent.';
+          _isError = false;
+        });
+      } else {
+        // Failure
+        setState(() {
+          _message = data['message'] ?? 'Failed to send reset link.';
+          _isError = true;
+        });
+      }
     } catch (e) {
       setState(() {
-        _message = 'Could not connect to the server.';
+        _message = 'Could not connect to the server. Please try again.';
         _isError = true;
       });
     }
+
     setState(() => _isLoading = false);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // --- Use a red gradient background consistent with other pages ---
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      extendBodyBehindAppBar: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -96,76 +87,66 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- Back Button ---
-              Padding(
-                padding: const EdgeInsets.only(left: 10, top: 10),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const SizedBox(height: 80),
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: StyledHeaderText(
+                'Forgot Password',
+                fontWeight: FontWeight.bold,
               ),
-              // --- Header ---
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    StyledHeaderText('Forgot Password', color: Colors.white),
-                    SizedBox(height: 10),
-                    StyledBodyText(
-                      "Enter your email to receive a reset link.",
-                      color: Colors.white70,
-                    ),
-                  ],
+            ),
+            const SizedBox(height: 50),
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(40)),
                 ),
-              ),
-              const SizedBox(height: 30),
-              // --- White Container for Content ---
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(40),
-                      topRight: Radius.circular(40),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(30),
+                child: Padding(
+                  padding: const EdgeInsets.all(30),
+                  child: SingleChildScrollView(
                     child: Column(
-                      children: [
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Enter your email and we will send you a link to reset your password.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 16,
+                          ),
+                        ),
                         const SizedBox(height: 30),
-                        // --- Email Input Field ---
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: Colors.grey.shade200),
-                            ),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color.fromARGB(255, 78, 77, 77),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                           ),
                           child: TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              hintText: 'Email',
+                              hintText: 'Your Email Address',
                               hintStyle: TextStyle(color: Colors.grey.shade600),
                               border: InputBorder.none,
-                              prefixIcon: Icon(
-                                Icons.email_outlined,
-                                color: Colors.red[300],
-                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 40),
-                        // --- Error/Success Message ---
                         if (_message.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 20.0),
+                            padding: const EdgeInsets.only(bottom: 10.0),
                             child: Text(
                               _message,
                               style: TextStyle(
@@ -175,10 +156,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        // --- Send Button ---
                         SizedBox(
                           width: double.infinity,
-                          height: 60,
+                          height: 70,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red[700],
@@ -196,7 +176,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     style: TextStyle(
                                       fontSize: 20,
                                       color: Colors.white,
-                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                           ),
@@ -206,8 +185,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

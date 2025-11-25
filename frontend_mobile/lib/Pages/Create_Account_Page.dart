@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv directly
 import '../Styled accessories/styled_body_text.dart';
 import '../Styled accessories/styled_header_text.dart';
 import 'Email_Verification_Pending_Page.dart';
+import '../services/api_config.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -23,9 +24,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   // State variables
   bool _isLoading = false;
   String _errorMessage = '';
+  String _successMessage = '';
 
   // API URL initialized directly from dotenv
-  final String _apiUrl = '${dotenv.env['API_BASE_URL']}/api/auth/signup';
+  final String _apiUrl = '${ApiConfig.baseUrl}/api/auth/signup';
 
   @override
   void dispose() {
@@ -38,40 +40,55 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 
   Future<void> _signupUser() async {
-    // 1. Basic Client-Side Validation
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      _successMessage = '';
+    });
+
     if (passwordController.text.trim() !=
         confirmPasswordController.text.trim()) {
       setState(() {
         _errorMessage = "Passwords do not match.";
+        _isLoading = false;
       });
       return;
     }
-
-    // 2. Reset state and show loading spinner
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
-
+    final String emailInput = emailController.text.trim().toLowerCase();
+    if (!emailInput.endsWith('@ucf.edu') &&
+        !emailInput.endsWith('@mail.valenciacollege.edu')) {
+      setState(() {
+        _errorMessage =
+            "Please use a valid @ucf.edu or @mail.valenciacollege.edu email.";
+        _isLoading = false;
+      });
+      return;
+    }
     try {
-      // 3. Make API Request
       final response = await http.post(
-        Uri.parse(_apiUrl), // Use the directly initialized URL
+        Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "username": usernameController.text.trim(),
           "email": emailController.text.trim(),
           "password": passwordController.text.trim(),
+          "confirmpassword": confirmPasswordController.text.trim(),
         }),
       );
 
-      final data = jsonDecode(response.body);
+      // --- 1. CHECK IF RESPONSE IS JSON ---
+      final String responseBody = response.body;
+      if (responseBody.isEmpty || responseBody[0] != '{') {
+        // This is not JSON, it's an error page (e.g., HTML)
+        throw FormatException(
+          "Server returned an invalid response (not JSON).",
+        );
+      }
 
-      // 4. Handle Response
+      final data = jsonDecode(responseBody);
+
       if (response.statusCode == 201) {
-        // --- SUCCESSFUL SIGNUP ---
-        if (!mounted) return;
-        // Navigate to the verification page so they can verify their email
+        // --- 2. SIGNUP SUCCESSFUL ---
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -81,22 +98,23 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
         );
       } else {
-        // --- SERVER ERRORS (e.g., Email already exists) ---
+        // --- 3. REAL BACKEND ERROR ---
         setState(() {
-          _errorMessage = data['message'] ?? 'Signup failed.';
+          _errorMessage = data['message'] ?? 'Signup failed. Try again.';
+          _isLoading = false;
         });
       }
     } catch (e) {
-      print("Signup Error: $e");
-      // --- CONNECTION ERRORS ---
+      // --- 4. IMPROVED CATCH BLOCK ---
+      // This will now show you the FormatException or the connection error
       setState(() {
-        _errorMessage =
-            'Could not connect to the server. Please check your internet and .env configuration.';
+        _errorMessage = 'An error occurred: $e';
+        _isLoading = false;
       });
+      print("Signup Error: $e"); // Print the full error for debugging
     }
 
-    // 5. Stop loading spinner (if still on this screen)
-    if (mounted) {
+    if (_errorMessage.isNotEmpty) {
       setState(() => _isLoading = false);
     }
   }

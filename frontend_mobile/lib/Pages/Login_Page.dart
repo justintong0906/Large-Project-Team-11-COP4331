@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv directly
 import '../Styled accessories/styled_body_text.dart';
 import '../Styled accessories/styled_header_text.dart';
 import 'Email_Verification_Pending_Page.dart';
 import 'Quiz_Page.dart';
 import 'Main_Dashboard_Page.dart';
 import 'Forgot_Password_Page.dart';
-import '../config.dart';
-import 'Create_Account_Page.dart';
+import '../services/api_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,27 +26,24 @@ class _LoginPageState extends State<LoginPage> {
   String _errorMessage = '';
 
   // API URL initialized directly from dotenv
-  final String _apiUrl = '${dotenv.env['API_BASE_URL']}/api/auth/login';
+  final String _apiUrl = '${ApiConfig.baseUrl}/api/auth/login';
 
   @override
   void dispose() {
-    // Clean up controllers when the widget is removed from the widget tree
     emailTextController.dispose();
     passwordTextController.dispose();
     super.dispose();
   }
 
   Future<void> _loginUser() async {
-    // 1. Reset state and show loading spinner
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
     try {
-      // 2. Make API Request
       final response = await http.post(
-        Uri.parse(_apiUrl), // Use the directly initialized URL
+        Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           'identifier': emailTextController.text.trim(),
@@ -57,26 +52,30 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       final data = jsonDecode(response.body);
-
-      // 3. Handle Response
       if (response.statusCode == 200) {
-        // --- SUCCESSFUL LOGIN ---
+        // --- 1. LOGIN SUCCESSFUL ---
         print('Login successful: $data');
 
-        final Map<String, dynamic> userData = data['user'];
-        // TODO: Save token securely
+        // 1. Get the user object and the token
+        final Map<String, dynamic> userData = Map<String, dynamic>.from(
+          data['user'],
+        );
+        final String token = data['token'];
 
-        // Check bitmask to see if quiz is done
+        // 2. INJECT THE TOKEN INTO USERDATA
+        userData['token'] = token;
+
+        // 3. Check for Quiz Completion
         final bool userHasCompletedQuiz =
             (userData['questionnaireBitmask'] ?? 0) > 0;
 
-        if (!mounted) return; // Check if user is still on the page
+        if (!mounted) return; // Check if widget is still on screen
 
-        // Navigate to the appropriate page
         if (!userHasCompletedQuiz) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
+              // userData now includes the 'token' field
               builder: (context) => QuizPage(userData: userData),
             ),
           );
@@ -84,44 +83,38 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
+              // userData now includes the 'token' field
               builder: (context) => MainDashboardPage(userData: userData),
             ),
           );
         }
       } else if (response.statusCode == 403) {
-        // --- NOT VERIFIED ERROR ---
-        // The backend says the email isn't verified yet.
-        if (!mounted) return;
-        Navigator.push(
+        // --- 3. USER IS NOT VERIFIED ---
+        // Go to the "pending" page so they can resend the email
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => EmailVerificationPendingPage(
-              // Pass the email they just typed so they can resend
+              // Pass the email they just typed
               email: emailTextController.text.trim(),
             ),
           ),
         );
       } else {
-        // --- OTHER ERRORS (e.g., Wrong password, 401, 404) ---
         setState(() {
           _errorMessage = data['message'] ?? 'Login failed';
         });
       }
     } catch (e) {
-      print("Login Error: $e");
-      // --- CONNECTION ERRORS ---
+      // Server connection error
       setState(() {
-        _errorMessage =
-            'Could not connect to the server. Please check your internet and .env configuration.';
+        _errorMessage = 'Could not connect to the server. Please try again.';
       });
     }
 
-    // 4. Stop loading spinner (if we are still on this screen)
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override

@@ -23,7 +23,7 @@ class StyledHeaderText extends StatelessWidget {
       textAlign: textAlign,
       style: TextStyle(
         // Use the provided color, or fall back to black if null
-        color: color ?? Colors.black,
+        color: color ?? Colors.white,
         fontSize: fontSize,
         fontWeight: fontWeight,
       ),

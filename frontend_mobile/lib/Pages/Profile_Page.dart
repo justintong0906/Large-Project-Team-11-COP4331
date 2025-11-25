@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../Styled accessories/styled_body_text.dart';
-import '../Styled accessories/styled_header_text.dart';
 import 'Login_Page.dart';
+import '../services/api_config.dart';
 
 class ProfilePage extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -15,226 +13,391 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late Map<String, dynamic> _currentUser;
-  bool _isEditing = false;
-  bool _isLoading = false;
-  final _formKey = GlobalKey<FormState>();
-  
+  // 1. Controllers
   late TextEditingController _usernameController;
+  late TextEditingController _emailController;
+  late TextEditingController _ageController;
+  late TextEditingController _genderController;
+  late TextEditingController _majorController;
   late TextEditingController _bioController;
-  late int _age;
-  late String _gender;
+  late TextEditingController _expController;
+
+  // 2. Quiz State (Selections)
+  final Set<String> _selectedDays = {};
+  final Set<String> _selectedTimes = {};
+  final Set<String> _selectedSplits = {};
+
+  bool _isLoading = false;
+
+  // --- 3. FIXED BITMAPS (MUST MATCH YOUR BACKEND EXACTLY) ---
+  // Backend: DAY_BITS = { sun: 0, mon: 1, ... sat: 6 }
+  final Map<String, int> _dayBits = {
+    'sun': 0,
+    'mon': 1,
+    'tue': 2,
+    'wed': 3,
+    'thu': 4,
+    'fri': 5,
+    'sat': 6,
+  };
+
+  // Backend: TIME_BITS = { morning: 7, afternoon: 8, evening: 9 }
+  final Map<String, int> _timeBits = {
+    'morning': 7,
+    'afternoon': 8,
+    'evening': 9,
+  };
+
+  // Backend: SPLIT_BITS = { arnold: 10, ppl: 11, brosplit: 12 }
+  final Map<String, int> _splitBits = {'arnold': 10, 'ppl': 11, 'brosplit': 12};
 
   @override
   void initState() {
     super.initState();
-    _currentUser = widget.userData;
-    _initializeControllers();
+    _initializeFields();
+    _decodeBitmask(); // This triggers the highlighting
   }
 
-  void _initializeControllers() {
-    _usernameController =
-        TextEditingController(text: _currentUser['username']);
-    _bioController = TextEditingController(text: _currentUser['bio'] ?? '');
-    _age = _currentUser['age'] ?? 18;
-    _gender = _currentUser['gender'] ?? 'other';
+  void _initializeFields() {
+    _usernameController = TextEditingController(
+      text: widget.userData['username'],
+    );
+    _emailController = TextEditingController(text: widget.userData['email']);
+
+    final profile = widget.userData['profile'] as Map<String, dynamic>? ?? {};
+
+    _ageController = TextEditingController(
+      text: (profile['age'] ?? '').toString(),
+    );
+    _genderController = TextEditingController(text: profile['gender'] ?? '');
+    _majorController = TextEditingController(text: profile['major'] ?? '');
+    _bioController = TextEditingController(text: profile['bio'] ?? '');
+    _expController = TextEditingController(
+      text: (profile['yearsOfExperience'] ?? '').toString(),
+    );
+  }
+
+  // --- 4. DECODE LOGIC (Highlights the buttons) ---
+  void _decodeBitmask() {
+    int mask = widget.userData['questionnaireBitmask'] ?? 0;
+
+    // Helper to check bits
+    void checkAndAdd(Map<String, int> map, Set<String> set) {
+      map.forEach((key, bitIndex) {
+        // If the bit at bitIndex is 1 (on), add it to our selection set
+        if ((mask & (1 << bitIndex)) != 0) {
+          set.add(key);
+        }
+      });
+    }
+
+    setState(() {
+      checkAndAdd(_dayBits, _selectedDays);
+      checkAndAdd(_timeBits, _selectedTimes);
+      checkAndAdd(_splitBits, _selectedSplits);
+    });
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
+    _emailController.dispose();
+    _ageController.dispose();
+    _genderController.dispose();
+    _majorController.dispose();
     _bioController.dispose();
+    _expController.dispose();
     super.dispose();
   }
 
-  // --- API Call: Update Profile ---
+  // --- 5. API CALL TO UPDATE ---
   Future<void> _updateProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
-    final String apiUrl = '${dotenv.env['API_BASE_URL']}/api/users/profile';
-    // In a real app, get token from secure storage
-    // final token = await SecureStorage.getToken();
+    // FIX: Use ID in URL instead of '/profile' to match standard REST patterns
+    final String apiUrl =
+        '${ApiConfig.baseUrl}/api/users/${widget.userData['_id']}';
 
     try {
       final response = await http.put(
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
-          // 'Authorization': 'Bearer $token',
+          'Authorization': 'Bearer ${widget.userData['token']}',
         },
         body: jsonEncode({
-          'userId': _currentUser['_id'],
-          'username': _usernameController.text.trim(),
-          'bio': _bioController.text.trim(),
-          'age': _age,
-          'gender': _gender,
+          // 1. Send Arrays (Backend will recalculate the bitmask from these)
+          'days': _selectedDays.toList(),
+          'times': _selectedTimes.toList(),
+          'splits': _selectedSplits.toList(),
+
+          // 2. Send Profile Data
+          'profile': {
+            'username': _usernameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'age': int.tryParse(_ageController.text.trim()),
+            'gender': _genderController.text.trim(),
+            'major': _majorController.text.trim(),
+            'bio': _bioController.text.trim(),
+            'yearsOfExperience': int.tryParse(_expController.text.trim()),
+          },
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
-          _currentUser = data['user'];
-          _isEditing = false;
-        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully!')),
+          const SnackBar(content: Text('Profile & Preferences saved!')),
         );
+
+        // Update Local Data so UI reflects changes immediately
+        setState(() {
+          // The backend returns the new bitmask, so we save it locally
+          widget.userData['questionnaireBitmask'] =
+              data['questionnaireBitmask'];
+
+          if (widget.userData['profile'] == null)
+            widget.userData['profile'] = {};
+          widget.userData['profile']['bio'] = _bioController.text.trim();
+          widget.userData['profile']['major'] = _majorController.text.trim();
+          widget.userData['profile']['age'] = int.tryParse(
+            _ageController.text.trim(),
+          );
+          widget.userData['profile']['gender'] = _genderController.text.trim();
+          widget.userData['profile']['yearsOfExperience'] = int.tryParse(
+            _expController.text.trim(),
+          );
+        });
       } else {
-        final data = jsonDecode(response.body);
+        print("Server Error: ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['message'] ?? 'Failed to update profile.'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Failed: ${response.statusCode}')),
         );
       }
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not connect to server.'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Could not connect to the server.')),
       );
     }
     setState(() => _isLoading = false);
   }
 
-  void _logout() {
-    // TODO: Clear secure storage token
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (Route<dynamic> route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: const Text("My Profile", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.red[800],
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: Icon(_isEditing ? Icons.close : Icons.edit),
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
             onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-                if (!_isEditing) _initializeControllers(); // Reset on cancel
-              });
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (Route<dynamic> route) => false,
+              );
             },
           ),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.grey,
-                child: Icon(Icons.person, size: 80, color: Colors.white),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Personal Details",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
-              const SizedBox(height: 20),
-              
-              // --- Username ---
-              _buildTextField("Username", _usernameController),
-              const SizedBox(height: 10),
+            ),
+            const SizedBox(height: 15),
 
-              // --- Bio ---
-              _buildTextField("Bio", _bioController, maxLines: 3),
-              const SizedBox(height: 20),
-
-              // --- Age & Gender Row ---
-              Row(
-                children: [
-                  Expanded(child: _buildAgeDropdown()),
-                  const SizedBox(width: 20),
-                  Expanded(child: _buildGenderDropdown()),
-                ],
-              ),
-              const SizedBox(height: 30),
-
-              // --- Save Button (only in edit mode) ---
-              if (_isEditing)
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[800],
-                    ),
-                    onPressed: _isLoading ? null : _updateProfile,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Save Changes',
-                            style: TextStyle(fontSize: 18)),
+            _buildTextField(_usernameController, "Username", Icons.person),
+            _buildTextField(_emailController, "Email", Icons.email),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _ageController,
+                    "Age",
+                    Icons.cake,
+                    keyboardType: TextInputType.number,
                   ),
                 ),
-              const SizedBox(height: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildTextField(
+                    _genderController,
+                    "Gender",
+                    Icons.transgender,
+                  ),
+                ),
+              ],
+            ),
+            _buildTextField(_majorController, "Major", Icons.school),
+            _buildTextField(
+              _expController,
+              "Years Exp",
+              Icons.fitness_center,
+              keyboardType: TextInputType.number,
+            ),
+            _buildTextField(_bioController, "Bio", Icons.article, maxLines: 3),
 
-              // --- Logout Button ---
-              TextButton.icon(
-                onPressed: _logout,
-                icon: const Icon(Icons.logout, color: Colors.red),
-                label: const Text("Logout", style: TextStyle(color: Colors.red)),
+            const SizedBox(height: 30),
+            const Divider(),
+            const SizedBox(height: 10),
+
+            const Text(
+              "Matching Preferences",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
-            ],
+            ),
+            const Text(
+              "Update these to change who you match with.",
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+
+            // Pass the CORRECT maps here
+            _buildChipSection("Days Available", _dayBits, _selectedDays),
+            _buildChipSection("Preferred Times", _timeBits, _selectedTimes),
+            _buildChipSection("Workout Split", _splitBits, _selectedSplits),
+
+            const SizedBox(height: 30),
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[800],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 5,
+                ),
+                onPressed: _isLoading ? null : _updateProfile,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Save All Changes',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Helper: Text Field ---
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType? keyboardType,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        style: const TextStyle(color: Colors.black),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.red[800]),
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.grey[600]),
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.red[800]!, width: 2),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {int maxLines = 1}) {
-    return TextFormField(
-      controller: controller,
-      enabled: _isEditing,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        border: _isEditing ? const OutlineInputBorder() : InputBorder.none,
-        filled: _isEditing,
-        fillColor: Colors.grey[100],
-      ),
-      validator: (value) =>
-          value == null || value.isEmpty ? '$label cannot be empty' : null,
-    );
-  }
+  // --- Helper: Chip Section ---
+  Widget _buildChipSection(
+    String title,
+    Map<String, int> options,
+    Set<String> selectedSet,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.red[800],
+            ),
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.keys.map((key) {
+            final isSelected = selectedSet.contains(key);
+            // Simple capitalization for display
+            final displayLabel = "${key[0].toUpperCase()}${key.substring(1)}";
 
-  Widget _buildAgeDropdown() {
-    return DropdownButtonFormField<int>(
-      value: _age,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: 'Age',
-        border: _isEditing ? const OutlineInputBorder() : InputBorder.none,
-      ),
-      items: List.generate(83, (index) => index + 18)
-          .map((age) => DropdownMenuItem(value: age, child: Text('$age')))
-          .toList(),
-      onChanged: _isEditing ? (value) => setState(() => _age = value!) : null,
-    );
-  }
-
-  Widget _buildGenderDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _gender,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: 'Gender',
-        border: _isEditing ? const OutlineInputBorder() : InputBorder.none,
-      ),
-      items: ['male', 'female', 'other']
-          .map((g) => DropdownMenuItem(value: g, child: Text(g.toUpperCase())))
-          .toList(),
-      onChanged: _isEditing ? (value) => setState(() => _gender = value!) : null,
+            return FilterChip(
+              label: Text(displayLabel),
+              selected: isSelected,
+              selectedColor: Colors.red[100],
+              checkmarkColor: Colors.red[800],
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected ? Colors.red[800]! : Colors.grey[300]!,
+                ),
+              ),
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.red[900] : Colors.black87,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              onSelected: (bool selected) {
+                setState(() {
+                  if (selected) {
+                    selectedSet.add(key);
+                  } else {
+                    selectedSet.remove(key);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

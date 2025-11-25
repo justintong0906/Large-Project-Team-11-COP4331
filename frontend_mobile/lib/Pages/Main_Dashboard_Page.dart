@@ -1,10 +1,12 @@
+// lib/Pages/main_dashboard_page.dart
+
 import 'package:flutter/material.dart';
-import 'Swipe_Page.dart';
-import 'Friends_Page.dart';
-import 'Profile_Page.dart';
+import 'swipe_page.dart';
+import 'friends_page.dart';
+import 'profile_page.dart';
 
 class MainDashboardPage extends StatefulWidget {
-  // We pass the full user data object here so the tabs can use it
+  // 1. Add constructor to accept user data
   final Map<String, dynamic> userData;
   const MainDashboardPage({super.key, required this.userData});
 
@@ -14,56 +16,48 @@ class MainDashboardPage extends StatefulWidget {
 
 class _MainDashboardPageState extends State<MainDashboardPage> {
   int _selectedIndex = 0;
-  // We need to initialize this list later so we can access widget.userData
+
+  // 2. Use a 'late' initializer for the pages list
   late final List<Widget> _widgetOptions;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the pages here, passing the user data to each one
+    // 3. Initialize the pages, passing the user data to them
     _widgetOptions = <Widget>[
-      SwipePage(userData: widget.userData),
+      SwipePage(currentUser: widget.userData),
       FriendsPage(userData: widget.userData),
       ProfilePage(userData: widget.userData),
     ];
   }
 
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // This switches the body content based on the selected bottom tab
-      body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
-
+      body: Center(
+        child: _widgetOptions.elementAt(
+          _selectedIndex,
+        ), // Display the selected page
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_filled),
-            activeIcon: Icon(Icons.home_filled),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: 'Matches',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.swipe), label: 'Swipe'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Friends'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red[800], // Color when selected
-        unselectedItemColor: Colors.grey, // Color when not selected
+        selectedItemColor: Colors.red[700], // Color for the selected icon/label
+        unselectedItemColor: Colors.grey, // Color for unselected icons/labels
+        backgroundColor: Colors.white, // Background color of the bar
+        type: BottomNavigationBarType.fixed, // Ensures all items are visible
+        elevation: 10, // Adds a shadow to the bar
         onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed, // Ensures all labels are visible
-        showUnselectedLabels: true,
-        elevation: 10,
       ),
     );
   }
