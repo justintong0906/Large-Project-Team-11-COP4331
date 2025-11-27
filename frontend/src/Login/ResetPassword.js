@@ -35,7 +35,7 @@ function ResetPassword() {
             }
             else{
                 setMessage("");
-                setError("Error resetting password.");        
+                setError(response);        
             }
         }
         else{

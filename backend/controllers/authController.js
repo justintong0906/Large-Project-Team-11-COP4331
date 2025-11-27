@@ -304,7 +304,8 @@ export const resetPassword = async (req, res) => {
     }
 
     // set new password (assumes pre-save hashing)
-    user.password = password;
+    const hashReset = await bcrypt.hash(password, 10);
+    user.password = hashReset;
 
     // clear reset fields
     user.passwordResetTokenHash = undefined;
