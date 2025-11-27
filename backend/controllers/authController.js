@@ -249,6 +249,9 @@ export const forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email required." });
     }
+    if (!email.includes("@")) {
+      return res.status(400).json({ message: "Must be a valid email." });
+    }
 
     const user = await User.findOne({ email: email.toLowerCase() });
 

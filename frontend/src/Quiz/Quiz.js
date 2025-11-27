@@ -161,8 +161,7 @@ function Quiz(){
                 <h2 class="tbHeader">Primary Information</h2>
                 <p class="tbLabel">Name*</p>   <input id="name" class="textbox" placeholder="Name" maxLength="100"></input><br/>
                 <p class="tbLabel">Bio</p>          <textarea id="bio" class="textbox" placeholder="Bio" rows="3" maxLength="500"></textarea><br/>
-                <p class="tbLabel">Phone Number</p>   <input id="phone" type="tel" class="textbox" placeholder="Phone Number" maxLength="15" pattern="[0-9]*" onInput={(e) => e.target.value = e.target.value.replace(/[^0-9]/g, '')}></input><br/>
-
+                <p class="tbLabel">Phone Number</p> <input id="phone" type="tel" class="textbox" placeholder="Phone Number" maxLength="20" pattern="[0-9-]*" onInput={(e) => e.target.value = e.target.value.replace(/[^0-9-]/g, '')} /> <br/>
                 <h2 class="tbHeader">Additional Information</h2>
                 <label for="genderSelect" class="tbLabel">Gender*</label>
                 <select id="genderSelect" class="textbox">

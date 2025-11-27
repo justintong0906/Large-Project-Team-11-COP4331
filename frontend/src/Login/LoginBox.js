@@ -132,10 +132,11 @@ function SignupBox({setView}){
 
 function ForgotPassword({setView}){
     const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
 
     const handleForgot = async () => {
         const email = document.getElementById("ForgotEmailInput").value;
-        const res = await fetch(`${API_BASE}/auth/forgot`, {
+        const res = await fetch(`${API_BASE}/auth/forgot-password`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({email})
@@ -144,8 +145,10 @@ function ForgotPassword({setView}){
 
         if (res.ok) {
             setMessage(data.message);
+            setError("");
         } else {
-            setMessage(data.message);
+            setError(data.message);
+            setMessage("");
         }
     };
     
@@ -153,7 +156,9 @@ function ForgotPassword({setView}){
         <div className="LoginBox">
             <h2 class="header">Forgot Password</h2>
             <input id="ForgotEmailInput" class="textbox" placeholder="Email" style={{marginBottom:"10px"}}></input>
-            {message && <p>{message}</p>}
+            {error && <p style={{color:"red"}}>{error}</p>}
+            {message && <p style={{color:"green"}}>{message}</p>}
+
             <button class="lbContent LoginButton" onClick={handleForgot}>Send Email</button><br/>
             <a class="lbContent hlink TextButton" style={{fontSize: '15pt'}} onClick={() => setView("login")} >Back to Login</a>
         </div>

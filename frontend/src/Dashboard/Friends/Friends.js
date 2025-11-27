@@ -48,7 +48,7 @@ function Friends() {
                 >
                     <img src={friend.profile?.photo} className="Image" alt={`${friend.username} profile picture`} />
                     <h3 className="Name">{friend.profile?.name}</h3>
-                    <h4 className="Username">{friend.username}</h4>
+                    <p className="Username">@{friend.username}</p>
                 </Link>
                 ))
             )}
