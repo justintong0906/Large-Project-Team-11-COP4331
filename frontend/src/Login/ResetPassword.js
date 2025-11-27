@@ -6,6 +6,9 @@ const API_BASE = process.env.REACT_APP_API_BASE;
 function ResetPassword() {
     const [searchParams] = useSearchParams();
     const paramToken = searchParams.get('token');
+    if(!paramToken){
+        window.location.href = "/";
+    }
 
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -15,7 +18,7 @@ function ResetPassword() {
 
         const newPassword = document.getElementById("newPassword").value;
         const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-        
+
         if(!newPassword || !confirmNewPassword){
             setMessage("");
             setError("Passwords must not be blank.");

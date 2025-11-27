@@ -65,9 +65,6 @@ function Profile() {
   // Simple helper style for the hardcoded "Active" days/times
     return (
         <div className="Profile">
-            {/* back button */}
-            <a className="backButton" href="/friends">← Back</a>
-
             {/* LEFT COLUMN */}
             <div style={{ "width": "50%" }}>
                 <center>
