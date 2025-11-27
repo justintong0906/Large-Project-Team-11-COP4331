@@ -30,7 +30,9 @@ function LoginBox({setView}){
         console.log(`${API_BASE}/auth/login`);
         const res = await fetch(`${API_BASE}/auth/login`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({identifier, password})
         });
         const data = await res.json();
@@ -40,7 +42,7 @@ function LoginBox({setView}){
             setError("");
             setSuccess("Login successful!");
             localStorage.setItem("token", data.token);
-            setTimeout(() => window.location.href = "/", 1000);
+            setTimeout(() => window.location.href = "/", 2000);
         } else {
             setSuccess("");
             setError(data.message);
