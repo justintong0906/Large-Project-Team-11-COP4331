@@ -17,7 +17,7 @@ function ResetPassword() {
         const confirmNewPassword = document.getElementById("confirmNewPassword").value;
         if(newPassword === confirmNewPassword){
             const response = await fetch(`${API_BASE}/auth/reset-password`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${paramToken}`
