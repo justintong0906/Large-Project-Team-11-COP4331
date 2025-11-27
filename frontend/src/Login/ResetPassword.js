@@ -15,7 +15,12 @@ function ResetPassword() {
 
         const newPassword = document.getElementById("newPassword").value;
         const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-        if(newPassword === confirmNewPassword || !newPassword){
+        
+        if(!newPassword || !confirmNewPassword){
+            setMessage("");
+            setError("Passwords must not be blank.");
+        }
+        else if(newPassword === confirmNewPassword){
             const response = await fetch(`${API_BASE}/auth/reset-password`, {
                 method: "POST",
                 headers: {
@@ -53,8 +58,8 @@ function ResetPassword() {
                 <input class="textboxRP" placeholder="New Password" id="newPassword" type="password"></input>
                 <p class="tbLabelRP">Confirm New Password</p>   
                 <input class="textboxRP" placeholder="Confirm New Password" id="confirmNewPassword" type="password"></input>
-                {error && <p style={{color:"red", justifyContent: "center"}}>{error}</p>}
-                {message && <p style={{color:"green", justifyContent: "center"}}>{message}</p>}
+                {error && <p style={{color:"red", textAlign: "center"}}>{error}</p>}
+                {message && <p style={{color:"green", textAlign: "center"}}>{message}</p>}
                 <button class="CenterRP ButtonSubmitRP" onClick={handleSubmit}>Submit</button>
             </div>
         </div>
