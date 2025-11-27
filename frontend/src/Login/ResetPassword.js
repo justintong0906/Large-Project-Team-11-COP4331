@@ -15,7 +15,7 @@ function ResetPassword() {
 
         const newPassword = document.getElementById("newPassword").value;
         const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-        if(newPassword === confirmNewPassword || newPassword.length<6){
+        if(newPassword === confirmNewPassword || !newPassword){
             const response = await fetch(`${API_BASE}/auth/reset-password`, {
                 method: "POST",
                 headers: {
