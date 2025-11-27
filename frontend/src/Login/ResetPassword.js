@@ -15,7 +15,7 @@ function ResetPassword() {
 
         const newPassword = document.getElementById("newPassword").value;
         const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-        if(newPassword === confirmNewPassword){
+        if(newPassword === confirmNewPassword || newPassword.length<6){
             const response = await fetch(`${API_BASE}/auth/reset-password`, {
                 method: "POST",
                 headers: {
@@ -40,7 +40,7 @@ function ResetPassword() {
         }
         else{
             setMessage("");
-            setError("Passwords do not match");
+            setError("Passwords must match and be at least 6 characters.");
         }
     }
     
