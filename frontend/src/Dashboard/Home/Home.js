@@ -41,7 +41,9 @@ const mockUser = {
 
     questionnaireBitmask: 7038,
 
-    profile: mockProfile
+    profile: mockProfile,
+	
+	_id: 1
 };
 
 const mockUser2 = {
@@ -56,7 +58,9 @@ const mockUser2 = {
 
     questionnaireBitmask: 7032,
 
-    profile: mockProfile2
+    profile: mockProfile2,
+	
+	_id: 2
 };
 
 
@@ -155,9 +159,9 @@ function Home() {
 		}
 	};
 	
-	const sendMatch = () => {
+	const sendMatch = (MATCHING_ID) => {
 		if (token) {
-			fetch(`${API_BASE}/users/send_match`, {
+			fetch(`${API_BASE}/users/match/{MATCHING_ID}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -355,7 +359,7 @@ function Home() {
 					<span class={time_states.Evening}>Evening</span>
 				</div>
 				<button 
-						onClick={token ? accept_match : switchUserFake}
+						onClick={token ? accept_match(randomUser._id) : switchUserFake}
 						className="button-generic"
 						style={{'background-color':'#393', 'right':'20px'}}
 						disabled={!randomUser} // Disable while loading
