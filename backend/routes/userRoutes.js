@@ -6,12 +6,12 @@ import { SendMatch } from "../controllers/userController.js";
 const router = express.Router();
 
 router.post("/match/:id", requireAuth, SendMatch);
+router.get("/random-compatible",requireAuth, getRandomCompatibleUser);
 
 
 router.get("/me", requireAuth, getUserProfile);
 router.get("/:id", requireAuth, getUserProfile);
 
-router.get("/random-compatible",requireAuth, getRandomCompatibleUser);
 
 // Authenticated self-update (recommended)
 router.put("/me/quiz", requireAuth, saveQuizResults);
