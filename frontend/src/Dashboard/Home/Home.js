@@ -161,7 +161,7 @@ function Home() {
 	
 	const sendMatch = (MATCHING_ID) => {
 		if (token) {
-			fetch(`${API_BASE}/users/match/{MATCHING_ID}`, {
+			fetch(`${API_BASE}/users/match/${MATCHING_ID}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -169,6 +169,13 @@ function Home() {
 				},
 				body: JSON.stringify({ data: randomUser.username })
 			})
+			.then(response => {
+				// Add response handling here
+				console.log("Match response:", response);
+			})
+			.catch(error => {
+				console.error("Match error:", error);
+			});
 		};
 	};
 	
@@ -359,7 +366,7 @@ function Home() {
 					<span class={time_states.Evening}>Evening</span>
 				</div>
 				<button 
-						onClick={token ? accept_match(randomUser._id) : switchUserFake}
+						onClick={token ? () => accept_match(randomUser ? randomUser._id : 0) : switchUserFake}
 						className="button-generic"
 						style={{'background-color':'#393', 'right':'20px'}}
 						disabled={!randomUser} // Disable while loading
