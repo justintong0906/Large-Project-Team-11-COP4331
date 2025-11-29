@@ -62,6 +62,13 @@ function ProfileEdit() {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+
+        const MAX_SIZE = 2 * 1024 * 1024; 
+        if (file.size > MAX_SIZE) {
+            setSuccess("")
+            setError("File is too large! Please select an image under 2MB.");
+            return;
+        }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImageBase64(reader.result);
@@ -77,12 +84,12 @@ function ProfileEdit() {
         console.log("got here")
         const photo = imageBase64;
         const name = document.getElementById("name").value;
-        const bio = document.getElementById("bio").value;
+        const bio = document.getElementById("bio").value || "N/A";
         const phone = document.getElementById("phone").value;
         const gender = document.getElementById("genderSelect").value;
-        const age = document.getElementById("age").value;
-        const major = document.getElementById("major").value;
-        const yearsOfExperience = document.getElementById("yearsOfExperience").value;
+        const age = document.getElementById("age").value || "N/A";
+        const major = document.getElementById("major").value || "N/A";
+        const yearsOfExperience = document.getElementById("yearsOfExperience").value || "N/A";
 
         const genderPreference = document.getElementById("workoutWith").value;
         const days = Array.from(document.querySelectorAll('input[name="workoutDays"]:checked')).map(input => input.value);
@@ -95,9 +102,10 @@ function ProfileEdit() {
         }
 
             //if missing required * fields
-        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0){
+        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0 || phone==''){
             console.log(genderPreference)
-            setError("Please fill out empty fields.");
+            setError("Please fill out required fields.");
+            setSuccess("");
         }
             //send info
         else{
@@ -120,6 +128,7 @@ function ProfileEdit() {
                 };
                 console.log("Sending:", bodyData);
                 setSuccess("Saving...");
+                setError("");
 
                 const response = await fetch(`${API_BASE}/users/me/quiz`, {
                     method: "PUT",
@@ -140,6 +149,7 @@ function ProfileEdit() {
                         navigate("/profile");
                     }, 2000);
                 } else {
+                    setSuccess("");
                     setError(data.message || "Failed to save edit");
                 }
             } catch (error) {
@@ -205,7 +215,7 @@ function ProfileEdit() {
 
 
                     {/* Name */}
-                    <br/><label class="editLabel">Name:</label>   <input id="name" class="editInput" placeholder="Name" maxLength="100" defaultValue={p.name}></input><br/>
+                    <br/><label class="editLabel">Name*</label>   <input id="name" class="editInput" placeholder="Name" maxLength="100" defaultValue={p.name}></input><br/>
                     
                     {/* Username */}
                     <p>@{u.username}</p>
@@ -213,10 +223,10 @@ function ProfileEdit() {
                 
                 <div className="userDetails">
                     {/* Age */}
-                    <br/><label class="editLabel">Age: </label>     <input id="age" class="editInput eiSmall" placeholder="Age" defaultValue={p.age}></input>
+                    <br/><label class="editLabel">Age* </label>     <input id="age" class="editInput eiSmall" placeholder="Age" defaultValue={p.age}></input>
                     
                     {/* Gender */}
-                    <label for="genderSelect" class="editLabel" style={{marginLeft: "10px"}}>Gender:</label>
+                    <label for="genderSelect" class="editLabel" style={{marginLeft: "10px"}}>Gender*</label>
                     <select id="genderSelect" class="editInput eiSmall" defaultValue={p.gender}>
                         <option value="">(Select Gender)</option>
                         <option value="male">Male</option>
@@ -225,12 +235,12 @@ function ProfileEdit() {
                     </select><br/><br/>
 
                     {/* Major */}
-                    <label class="editLabel">Major:</label>        <input id="major" class="editInput" placeholder="Major" maxLength="100" defaultValue={p.major}></input>
+                    <label class="editLabel">Major</label>        <input id="major" class="editInput" placeholder="Major" maxLength="100" defaultValue={p.major}></input>
                     <br/><br/>
 
                     {/* Phone */}
                     <label class="editLabel">
-                        Phone Number:
+                        Phone Number*
                     </label> 
                     <input id="phone" type="tel" class="editInput" placeholder="Phone Number" defaultValue={p.phone} style={{width: "60%"}} maxLength="20" pattern="[0-9-]*" onInput={(e) => e.target.value = e.target.value.replace(/[^0-9-]/g, '')} /> 
                     <br/>
@@ -244,15 +254,15 @@ function ProfileEdit() {
             <div style={{ "width": "50%", paddingLeft: "20px" }}>
 
                 {/* Bio */}
-                <p class="editLabel">Bio:</p>          <textarea id="bio" class="editInput" placeholder="Bio" rows="4" maxLength="500" defaultValue={p.bio}></textarea><br/>
+                <p class="editLabel">Bio</p>          <textarea id="bio" class="editInput" placeholder="Bio" rows="4" maxLength="500" defaultValue={p.bio}></textarea><br/>
                 
                 {/* a divider line */}
                 <div style={{ "height": "2px", "left": "5%", "top": "30%", "right": "5%", "backgroundColor": "#D7D7D7", margin: "10px 0" }} />
                 
-                <label >Years of Gym Experience:</label> <input id="yearsOfExperience" class="editInput eiSmall" defaultValue={p.yearsOfExperience}></input> Years
+                <label >Years of Gym Experience</label> <input id="yearsOfExperience" class="editInput eiSmall" defaultValue={p.yearsOfExperience}></input> Years
                 
                 {/* Workout splits: render checkboxes, pre-checked based on splits array */}
-                <p>Workout Split(s):</p>
+                <p>Workout Split(s)*</p>
                 <div class="radioGroupEdit RGEperm">
                     <input type="checkbox" id="ppl" name="workoutSplit" value="ppl" defaultChecked={splits.includes("Push/Pull/Legs")}/>
                     <label for="ppl">Push/Pull/Legs</label>
@@ -262,7 +272,7 @@ function ProfileEdit() {
                     <label for="brosplit">Bro Split</label>
                 </div>
                 
-                <p>Days Available: </p>
+                <p>Days Available* </p>
                 <div class="radioGroupEdit">
                     <input type="checkbox" id="sunday" name="workoutDays" value="sun" defaultChecked={days.includes("Su")}/>
                     <label for="sunday">Su</label>
@@ -280,7 +290,7 @@ function ProfileEdit() {
                     <label for="saturday">Sa</label>
                 </div>
                 
-                <p>Times Available: </p>
+                <p>Times Available* </p>
                 <div class="radioGroupEdit">
                     <input type="checkbox" id="morning" name="workoutTime" value="morning" defaultChecked={times.includes("Morning")}/>
                     <label for="morning">Morning</label>
@@ -293,7 +303,7 @@ function ProfileEdit() {
                                     
                 {/* Gender Preference */}
                 <label class="editLabel">
-                    Gender Workout Preference: 
+                    Gender Workout Preference*
                 </label>
                 <select id="workoutWith" class="editInput" defaultValue={p.genderPreferences}>
                     <option value="">(Select Gender)</option>

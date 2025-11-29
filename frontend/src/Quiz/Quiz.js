@@ -48,6 +48,14 @@ function Quiz(){
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            const MAX_SIZE = 2 * 1024 * 1024; 
+
+            if (file.size > MAX_SIZE) {
+                setSuccess("")
+                setError("File is too large! Please select an image under 2MB.");
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImageBase64(reader.result);
@@ -95,7 +103,7 @@ function Quiz(){
         }
 
             //if missing required * fields
-        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0){
+        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0 || phone ==0){
             setError("Please fill out required fields indicated by *");
         }
             //send info
@@ -161,7 +169,7 @@ function Quiz(){
                 <h2 class="tbHeader">Primary Information</h2>
                 <p class="tbLabel">Name*</p>   <input id="name" class="textbox" placeholder="Name" maxLength="100"></input><br/>
                 <p class="tbLabel">Bio</p>          <textarea id="bio" class="textbox" placeholder="Bio" rows="3" maxLength="500"></textarea><br/>
-                <p class="tbLabel">Phone Number</p> <input id="phone" type="tel" class="textbox" placeholder="Phone Number" maxLength="20" pattern="[0-9-]*" onInput={(e) => e.target.value = e.target.value.replace(/[^0-9-]/g, '')} /> <br/>
+                <p class="tbLabel">Phone Number*</p> <input id="phone" type="tel" class="textbox" placeholder="Phone Number" maxLength="20" pattern="[0-9-]*" onInput={(e) => e.target.value = e.target.value.replace(/[^0-9-]/g, '')} /> <br/>
                 <h2 class="tbHeader">Additional Information</h2>
                 <label for="genderSelect" class="tbLabel">Gender*</label>
                 <select id="genderSelect" class="textbox">
@@ -170,7 +178,7 @@ function Quiz(){
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                 </select><br/>
-                <p class="tbLabel">Age</p>          <input id="age" type="number" class="textbox" placeholder="Age" min="0"></input><br/>
+                <p class="tbLabel">Age*</p>          <input id="age" type="number" class="textbox" placeholder="Age" min="0"></input><br/>
                 <p class="tbLabel">Major</p>        <input id="major" class="textbox" placeholder="Major" maxLength="100"></input><br/>
                 <p class="tbLabel">Years of Gym Experience</p>  <input id="yearsOfExperience" type="number" class="textbox" placeholder="Years of Gym Experience" min="0"></input><br/>
 
