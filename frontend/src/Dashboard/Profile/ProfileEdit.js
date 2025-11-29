@@ -119,7 +119,7 @@ function ProfileEdit() {
                     splits  //
                 };
                 console.log("Sending:", bodyData);
-                setSuccess("Saving...")
+                setSuccess("Saving...");
 
                 const response = await fetch(`${API_BASE}/users/me/quiz`, {
                     method: "PUT",
@@ -144,6 +144,7 @@ function ProfileEdit() {
                 }
             } catch (error) {
                 console.error("Error saving quiz:", error);
+                setSuccess("");
                 setError("Failed to save edit.");
             }
         }
