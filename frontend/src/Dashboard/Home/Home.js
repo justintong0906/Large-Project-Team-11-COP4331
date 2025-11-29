@@ -167,14 +167,18 @@ function Home() {
 					"Content-Type": "application/json",
 					"Authorization": `Bearer ${token}`
 				},
-				body: JSON.stringify({ data: randomUser.username })
+				body: JSON.stringify({})
 			})
 			.then(response => {
 				// Add response handling here
 				console.log("Match response:", response);
+				if (MATCHING_ID == -999) {
+					console.log("sendMatch was provided an ID of -999, meaning randomUser was null.");
+				}
 			})
 			.catch(error => {
 				console.error("Match error:", error);
+				console.warn("- Selected User Data was: ", randomUser)
 			});
 		};
 	};
@@ -366,7 +370,7 @@ function Home() {
 					<span class={time_states.Evening}>Evening</span>
 				</div>
 				<button 
-						onClick={token ? () => accept_match(randomUser ? randomUser._id : 0) : switchUserFake}
+						onClick={token ? () => accept_match(randomUser ? randomUser._id : -999) : switchUserFake}
 						className="button-generic"
 						style={{'background-color':'#393', 'right':'20px'}}
 						disabled={!randomUser} // Disable while loading
