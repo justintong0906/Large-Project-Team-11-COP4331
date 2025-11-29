@@ -5,10 +5,11 @@ import { SendMatch } from "../controllers/userController.js";
 
 const router = express.Router();
 
-router.post("/match/:id", requireAuth, SendMatch);
-router.get("/random-compatible",requireAuth, getRandomCompatibleUser);
-
 router.get("/me", requireAuth, getUserProfile);
+
+router.post("/match/:id", requireAuth, SendMatch);
+
+router.get("/random-compatible",requireAuth, getRandomCompatibleUser);
 
 
 
