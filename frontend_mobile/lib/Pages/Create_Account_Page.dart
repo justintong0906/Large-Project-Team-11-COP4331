@@ -20,6 +20,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final phonenumberController = TextEditingController();
 
   // State variables
   bool _isLoading = false;
@@ -36,6 +37,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    phonenumberController.dispose();
     super.dispose();
   }
 
@@ -64,6 +66,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       });
       return;
     }
+    if (phonenumberController.text.trim().isEmpty) {
+      setState(() {
+        _errorMessage = "Please enter your phone number.";
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
       final response = await http.post(
         Uri.parse(_apiUrl),
@@ -71,6 +81,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         body: jsonEncode({
           "username": usernameController.text.trim(),
           "email": emailController.text.trim(),
+          "phone": phonenumberController.text.trim(),
           "password": passwordController.text.trim(),
           "confirmpassword": confirmPasswordController.text.trim(),
         }),
@@ -139,7 +150,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomRight,
-            colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
+            colors: [
+              Colors.yellow[800]!,
+              Colors.yellow[600]!,
+              Colors.yellow[400]!,
+            ],
           ),
         ),
         child: Column(
@@ -213,6 +228,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                                 icon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                               ),
+                              // --- Phone Input ---
+                              _buildInputField(
+                                controller: phonenumberController,
+                                hintText: 'Phone Number',
+                                icon: Icons.phone,
+                                keyboardType: TextInputType.phone,
+                              ),
                               // --- Password Input ---
                               _buildInputField(
                                 controller: passwordController,
@@ -240,7 +262,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             child: Text(
                               _errorMessage,
                               style: const TextStyle(
-                                color: Colors.red,
+                                color: Colors.yellow,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.center,
@@ -253,7 +275,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           height: 60,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[800],
+                              backgroundColor: Colors.yellow[800],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),
@@ -290,7 +312,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               child: Text(
                                 "Login",
                                 style: TextStyle(
-                                  color: Colors.red[800],
+                                  color: Colors.yellow[800],
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -334,7 +356,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey.shade600),
           border: InputBorder.none,
-          prefixIcon: Icon(icon, color: Colors.red[300]),
+          prefixIcon: Icon(icon, color: Colors.yellow[300]),
         ),
       ),
     );

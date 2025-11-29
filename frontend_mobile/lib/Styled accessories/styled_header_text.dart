@@ -11,8 +11,8 @@ class StyledHeaderText extends StatelessWidget {
     this.text, {
     super.key,
     this.color,
-    this.fontSize = 32.0, // Default size for headers
-    this.fontWeight = FontWeight.bold, // Default weight for headers
+    this.fontSize = 32.0,
+    required this.fontWeight, // <--- Now Required
     this.textAlign,
   });
 
@@ -22,7 +22,7 @@ class StyledHeaderText extends StatelessWidget {
       text,
       textAlign: textAlign,
       style: TextStyle(
-        // Use the provided color, or fall back to black if null
+        // Use the provided color, or fall back to white if null
         color: color ?? Colors.white,
         fontSize: fontSize,
         fontWeight: fontWeight,

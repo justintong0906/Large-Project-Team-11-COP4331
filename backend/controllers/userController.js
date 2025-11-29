@@ -206,7 +206,6 @@ export const saveQuizResults = async (req, res) => {
       if (test(value)) 
         profileSet[`profile.${key}`] = value;
     };
-
     // Basic validations mirroring your schema constraints
     const inEnum = (v, arr) => v === undefined || arr.includes(String(v));
     const within = (v, min, max) => v === undefined || (typeof v === "number" && v >= min && v <= max);

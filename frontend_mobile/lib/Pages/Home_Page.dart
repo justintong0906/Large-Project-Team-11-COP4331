@@ -22,7 +22,11 @@ class HomePage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomRight,
-            colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
+            colors: [
+              Colors.yellow[800]!,
+              Colors.yellow[600]!,
+              Colors.yellow[300]!,
+            ],
           ),
         ),
         child: SingleChildScrollView(
@@ -92,7 +96,7 @@ class HomePage extends StatelessWidget {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: Colors.red[800],
+                              foregroundColor: Colors.yellow[800],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),
@@ -111,7 +115,7 @@ class HomePage extends StatelessWidget {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold, // Bold
                                 fontSize: 20, // Bigger font
-                                color: Colors.red[800],
+                                color: Colors.yellow[800],
                               ),
                             ),
                           ),
@@ -125,7 +129,7 @@ class HomePage extends StatelessWidget {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: Colors.red[800],
+                              foregroundColor: Colors.yellow[800],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),
@@ -145,7 +149,7 @@ class HomePage extends StatelessWidget {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold, // Bold
                                 fontSize: 20, // Bigger font
-                                color: Colors.red[800],
+                                color: Colors.yellow[800],
                               ),
                             ),
                           ),

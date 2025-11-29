@@ -1,5 +1,3 @@
-// lib/Pages/email_verification_pending_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -110,7 +108,11 @@ class _EmailVerificationPendingPageState
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomRight,
-            colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
+            colors: [
+              Colors.yellow[800]!,
+              Colors.yellow[600]!,
+              Colors.yellow[300]!,
+            ],
           ),
         ),
         child: Column(
@@ -139,7 +141,7 @@ class _EmailVerificationPendingPageState
                       children: <Widget>[
                         Icon(
                           Icons.email_outlined,
-                          color: Colors.red[700],
+                          color: Colors.yellow[700],
                           size: 80,
                         ),
                         const SizedBox(height: 30),
@@ -164,7 +166,7 @@ class _EmailVerificationPendingPageState
                             child: Text(
                               _message,
                               style: TextStyle(
-                                color: _isError ? Colors.red : Colors.green,
+                                color: _isError ? Colors.yellow : Colors.green,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.center,
@@ -176,7 +178,7 @@ class _EmailVerificationPendingPageState
                           height: 60,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[700],
+                              backgroundColor: Colors.yellow[700],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),
@@ -207,7 +209,9 @@ class _EmailVerificationPendingPageState
                                 ? 'Resend Email'
                                 : 'Resend email in $_timerCountdown s',
                             style: TextStyle(
-                              color: _canResend ? Colors.red[700] : Colors.grey,
+                              color: _canResend
+                                  ? Colors.yellow[700]
+                                  : Colors.grey,
                             ),
                           ),
                         ),

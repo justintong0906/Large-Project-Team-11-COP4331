@@ -17,15 +17,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Text editing controllers
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
-
-  // State variables
   bool _isLoading = false;
   String _errorMessage = '';
-
-  // API URL initialized directly from dotenv
   final String _apiUrl = '${ApiConfig.baseUrl}/api/auth/login';
 
   @override
@@ -42,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final response = await http.post(
+      final loginResponse = await http.post(
         Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
@@ -51,78 +46,95 @@ class _LoginPageState extends State<LoginPage> {
         }),
       );
 
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        // --- 1. LOGIN SUCCESSFUL ---
-        print('Login successful: $data');
+      final loginData = jsonDecode(loginResponse.body);
 
-        // 1. Get the user object and the token
-        final Map<String, dynamic> userData = Map<String, dynamic>.from(
-          data['user'],
+      if (loginResponse.statusCode == 200) {
+        final String token = loginData['token'];
+        final String userId = loginData['user']['id'];
+
+        final String profileUrl = '${ApiConfig.baseUrl}/api/users/$userId';
+        final profileResponse = await http.get(
+          Uri.parse(profileUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
         );
-        final String token = data['token'];
 
-        // 2. INJECT THE TOKEN INTO USERDATA
-        userData['token'] = token;
-
-        // 3. Check for Quiz Completion
-        final bool userHasCompletedQuiz =
-            (userData['questionnaireBitmask'] ?? 0) > 0;
-
-        if (!mounted) return; // Check if widget is still on screen
-
-        if (!userHasCompletedQuiz) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              // userData now includes the 'token' field
-              builder: (context) => QuizPage(userData: userData),
-            ),
+        if (profileResponse.statusCode == 200) {
+          final fullUserProfile = jsonDecode(profileResponse.body);
+          final Map<String, dynamic> finalUserData = Map<String, dynamic>.from(
+            fullUserProfile,
           );
+          finalUserData['token'] = token;
+
+          final int bitmask = finalUserData['questionnaireBitmask'] ?? 0;
+          final bool hasDoneQuiz = bitmask > 0;
+
+          if (!mounted) return;
+
+          if (hasDoneQuiz) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    MainDashboardPage(userData: finalUserData),
+              ),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => QuizPage(userData: finalUserData),
+              ),
+            );
+          }
         } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              // userData now includes the 'token' field
-              builder: (context) => MainDashboardPage(userData: userData),
-            ),
-          );
+          setState(() {
+            _errorMessage = 'Login succeeded, but failed to load profile.';
+          });
         }
-      } else if (response.statusCode == 403) {
-        // --- 3. USER IS NOT VERIFIED ---
-        // Go to the "pending" page so they can resend the email
+      } else if (loginResponse.statusCode == 403) {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => EmailVerificationPendingPage(
-              // Pass the email they just typed
               email: emailTextController.text.trim(),
             ),
           ),
         );
       } else {
         setState(() {
-          _errorMessage = data['message'] ?? 'Login failed';
+          _errorMessage = loginData['message'] ?? 'Login failed';
         });
       }
     } catch (e) {
-      // Server connection error
       setState(() {
-        _errorMessage = 'Could not connect to the server. Please try again.';
+        _errorMessage = 'Could not connect to the server.';
       });
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        // --- ADDED BACK BUTTON HERE ---
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       extendBodyBehindAppBar: true,
-      // --- Background Gradient ---
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -130,14 +142,17 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomRight,
-            colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
+            colors: [
+              Colors.yellow[800]!,
+              Colors.yellow[600]!,
+              Colors.yellow[300]!,
+            ],
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             const SizedBox(height: 80),
-            // --- Header Text ---
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -158,7 +173,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             const SizedBox(height: 50),
-            // --- White Container Block ---
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -175,7 +189,6 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         const SizedBox(height: 40),
-                        // --- Input Fields Container ---
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -191,7 +204,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           child: Column(
                             children: <Widget>[
-                              // --- Email Input ---
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
@@ -212,12 +224,11 @@ class _LoginPageState extends State<LoginPage> {
                                     border: InputBorder.none,
                                     prefixIcon: Icon(
                                       Icons.person_outline,
-                                      color: Colors.red[300],
+                                      color: Colors.yellow[300],
                                     ),
                                   ),
                                 ),
                               ),
-                              // --- Password Input ---
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 child: TextField(
@@ -231,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
                                     border: InputBorder.none,
                                     prefixIcon: Icon(
                                       Icons.lock_outline,
-                                      color: Colors.red[300],
+                                      color: Colors.yellow[300],
                                     ),
                                   ),
                                 ),
@@ -240,22 +251,18 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 30),
-
-                        // --- Error Message Display ---
                         if (_errorMessage.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 20.0),
                             child: Text(
                               _errorMessage,
                               style: const TextStyle(
-                                color: Colors.red,
+                                color: Colors.yellow,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.center,
                             ),
                           ),
-
-                        // --- Forgot Password Link ---
                         Align(
                           alignment: Alignment.center,
                           child: TextButton(
@@ -275,26 +282,21 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 30),
-
-                        // --- Login Button ---
                         SizedBox(
                           width: double.infinity,
                           height: 60,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[800],
+                              backgroundColor: Colors.yellow[800],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),
                             ),
-                            // Disable button while loading
                             onPressed: _isLoading ? null : _loginUser,
                             child: _isLoading
-                                // Show loading spinner if loading
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
                                   )
-                                // Show text otherwise
                                 : const Text(
                                     'Login',
                                     style: TextStyle(

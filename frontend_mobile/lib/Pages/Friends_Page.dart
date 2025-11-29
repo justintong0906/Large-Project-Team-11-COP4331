@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:typed_data'; // Required for Uint8List
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/api_config.dart';
 import 'Friends_Profile_Page.dart';
 
 class FriendsPage extends StatefulWidget {
@@ -22,24 +24,70 @@ class _FriendsPageState extends State<FriendsPage> {
     _fetchMatches();
   }
 
-  // --- API Call: Get Matches ---
   Future<void> _fetchMatches() async {
-    final String apiUrl =
-        '${dotenv.env['API_BASE_URL']}/api/matches/${widget.userData['_id']}';
+    // 1. Get User ID
+    final String userId = widget.userData['_id'] ?? widget.userData['id'] ?? '';
+
+    if (userId.isEmpty) {
+      print("Error: User ID is missing in FriendsPage");
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // 2. Use the correct API URL
+    final String apiUrl = '${ApiConfig.baseUrl}/api/users/$userId';
 
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      // 3. Send Token in Headers
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.userData['token']}',
+        },
+      );
+
       if (response.statusCode == 200) {
-        setState(() {
-          _matches = jsonDecode(response.body);
-          _isLoading = false;
-        });
+        final data = jsonDecode(response.body);
+
+        // Extract friends list
+        final List<dynamic> friendsList = data['friends'] ?? [];
+
+        if (mounted) {
+          setState(() {
+            _matches = friendsList;
+            _isLoading = false;
+          });
+        }
       } else {
-        setState(() => _isLoading = false);
+        print("Friends API Error: ${response.statusCode}");
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
       print("Error fetching matches: $e");
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // Helper: Safe Image Provider
+  ImageProvider? _safeImageProvider(String? base64String) {
+    if (base64String == null || base64String.isEmpty) return null;
+    try {
+      if (base64String.startsWith('http')) return NetworkImage(base64String);
+
+      String cleanString = base64String.contains(',')
+          ? base64String.split(',').last
+          : base64String;
+      cleanString = cleanString.replaceAll(RegExp(r'\s+'), '');
+
+      final Uint8List bytes = base64Decode(
+        cleanString,
+      ); // Fixed: Removed java.util
+      if (bytes.isEmpty) return null;
+
+      return MemoryImage(bytes);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -48,11 +96,13 @@ class _FriendsPageState extends State<FriendsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your Matches"),
-        backgroundColor: Colors.red[800],
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.yellow[800],
         elevation: 0,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.red[800]))
+          ? Center(child: CircularProgressIndicator(color: Colors.yellow[800]))
           : _matches.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
@@ -61,7 +111,7 @@ class _FriendsPageState extends State<FriendsPage> {
               itemBuilder: (context, index) {
                 final match = _matches[index];
 
-                // Safe Image Extraction
+                // Safe Data Extraction
                 final profileData = match['profile'] ?? {};
                 final String? photoUrl = profileData['photo'];
                 final String username = match['username'] ?? 'User';
@@ -77,7 +127,6 @@ class _FriendsPageState extends State<FriendsPage> {
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(10),
-
                     onTap: () {
                       Navigator.push(
                         context,
@@ -89,17 +138,15 @@ class _FriendsPageState extends State<FriendsPage> {
                     },
                     leading: CircleAvatar(
                       radius: 30,
-                      backgroundColor: Colors.red[100],
-                      backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
-                          ? NetworkImage(photoUrl)
-                          : null,
-                      child: (photoUrl == null || photoUrl.isEmpty)
+                      backgroundColor: Colors.yellow[100],
+                      backgroundImage: _safeImageProvider(photoUrl),
+                      child: _safeImageProvider(photoUrl) == null
                           ? Text(
                               username.isNotEmpty
                                   ? username[0].toUpperCase()
                                   : '?',
                               style: TextStyle(
-                                color: Colors.red[800],
+                                color: Colors.yellow[800],
                                 fontWeight: FontWeight.bold,
                                 fontSize: 24,
                               ),

@@ -84,7 +84,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomRight,
-            colors: [Colors.red[800]!, Colors.red[600]!, Colors.red[300]!],
+            colors: [
+              Colors.yellow[800]!,
+              Colors.yellow[600]!,
+              Colors.yellow[300]!,
+            ],
           ),
         ),
         child: Column(
@@ -150,7 +154,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             child: Text(
                               _message,
                               style: TextStyle(
-                                color: _isError ? Colors.red : Colors.green,
+                                color: _isError ? Colors.yellow : Colors.green,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.center,
@@ -161,7 +165,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           height: 70,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[700],
+                              backgroundColor: Colors.yellow[700],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),

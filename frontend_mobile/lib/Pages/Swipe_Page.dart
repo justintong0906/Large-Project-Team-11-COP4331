@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:typed_data';
 import '../services/api_config.dart';
 
 class SwipePage extends StatefulWidget {
@@ -26,12 +26,27 @@ class _SwipePageState extends State<SwipePage> {
     _fetchBatchOfUsers();
   }
 
-  // --- 1. HELPER: CALCULATE SCORE LOCALLY ---
+  // --- Image Helper ---
+  ImageProvider? _safeImageProvider(String? base64String) {
+    if (base64String == null || base64String.isEmpty) return null;
+    try {
+      if (base64String.startsWith('http')) return NetworkImage(base64String);
+      String cleanString = base64String.contains(',')
+          ? base64String.split(',').last
+          : base64String;
+      cleanString = cleanString.replaceAll(RegExp(r'\s+'), '');
+      final Uint8List bytes = base64Decode(cleanString);
+      if (bytes.isEmpty) return null;
+      return MemoryImage(bytes);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // --- Score Helper ---
   int _calculateMatchScore(int otherMask) {
     int myMask = widget.currentUser['questionnaireBitmask'] ?? 0;
     int intersection = myMask & otherMask;
-
-    // Count how many bits are set to 1 (Popcount)
     int count = 0;
     while (intersection > 0) {
       intersection &= (intersection - 1);
@@ -40,20 +55,18 @@ class _SwipePageState extends State<SwipePage> {
     return count;
   }
 
-  // --- 2. FETCH A BATCH (LOOP 5 TIMES) ---
+  // --- Fetch Users ---
   Future<void> _fetchBatchOfUsers() async {
-    if (_isFetchingBatch) return; // Guard against multiple calls
+    if (_isFetchingBatch) return;
     setState(() => _isFetchingBatch = true);
 
     if (_potentialMatches.isEmpty) {
       setState(() => _isLoading = true);
     }
 
-    // Use ApiConfig here
-    final String apiUrl = '${ApiConfig.baseUrl}/api/users/compatible';
+    final String apiUrl = '${ApiConfig.baseUrl}/api/users/random-compatible';
     List<Map<String, dynamic>> newBatch = [];
 
-    // Loop to fetch 5 users to build a "deck"
     for (int i = 0; i < 5; i++) {
       try {
         final response = await http.get(
@@ -66,37 +79,30 @@ class _SwipePageState extends State<SwipePage> {
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-
-          // Check for duplicates (ID check)
           bool alreadyExists =
               _potentialMatches.any((u) => u['_id'] == data['_id']) ||
               newBatch.any((u) => u['_id'] == data['_id']);
 
           if (!alreadyExists) {
-            // Calculate score and attach it
             int score = _calculateMatchScore(data['questionnaireBitmask'] ?? 0);
             data['localScore'] = score;
             newBatch.add(data);
           }
         } else if (response.statusCode == 404) {
-          // No more users found in DB
           break;
         } else if (response.statusCode == 400) {
-          // --- HANDLE INCOMPLETE PROFILE ---
           _showIncompleteProfileWarning();
           setState(() {
             _isLoading = false;
             _isFetchingBatch = false;
           });
-          return; // Stop fetching completely
+          return;
         }
       } catch (e) {
         print("Error fetching user: $e");
       }
     }
 
-    // --- 3. SORT THE BATCH LOCALLY ---
-    // Sort descending by score (Higher score first)
     newBatch.sort(
       (a, b) => (b['localScore'] as int).compareTo(a['localScore'] as int),
     );
@@ -117,32 +123,50 @@ class _SwipePageState extends State<SwipePage> {
         content: const Text(
           "Update your Profile preferences (Days, Times, Splits) to see matches!",
         ),
-        backgroundColor: Colors.red[800],
-        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.yellow[800],
         action: SnackBarAction(
           label: "OK",
           textColor: Colors.white,
-          onPressed: () {
-            // User can manually navigate to profile
-          },
+          onPressed: () {},
         ),
       ),
     );
   }
 
-  // --- 4. HANDLE SWIPE ---
+  // --- NEW: Helper to Show Notifications ---
+  void _showNotification(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Remove previous
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, textAlign: TextAlign.center),
+        backgroundColor: color,
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        margin: const EdgeInsets.only(bottom: 20, left: 50, right: 50),
+      ),
+    );
+  }
+
+  // --- Handle Swipe ---
   Future<void> _handleSwipe(int index, SwipeDirection direction) async {
-    // Pagination: If we are running low (less than 3 cards), fetch another batch
+    // 1. Pagination
     if (_potentialMatches.length - index < 3) {
       _fetchBatchOfUsers();
     }
 
-    if (direction == SwipeDirection.left) return;
+    // 2. Handle Left Swipe (Rejected)
+    if (direction == SwipeDirection.left) {
+      _showNotification("Rejected", Colors.grey[700]!);
+      return;
+    }
 
+    // 3. Handle Right Swipe (API Call)
     final matchedUser = _potentialMatches[index];
     final String targetUserId = matchedUser['_id'];
 
-    // Use ApiConfig here as well
+    // FIX: URL was incorrect in your snippet. It must be /match/:id
     final String apiUrl = '${ApiConfig.baseUrl}/api/users/match/$targetUserId';
 
     try {
@@ -159,6 +183,9 @@ class _SwipePageState extends State<SwipePage> {
         final data = jsonDecode(response.body);
         if (data['message'] == "It's a match!") {
           _showMatchDialog(matchedUser);
+        } else {
+          // Show "Friend request sent" only if it wasn't an instant match
+          _showNotification("Friend request sent!", Colors.green[600]!);
         }
       }
     } catch (e) {
@@ -189,7 +216,7 @@ class _SwipePageState extends State<SwipePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading && _potentialMatches.isEmpty
-          ? Center(child: CircularProgressIndicator(color: Colors.red[800]))
+          ? Center(child: CircularProgressIndicator(color: Colors.yellow[800]))
           : _potentialMatches.isEmpty
           ? _buildNoUsersState()
           : Padding(
@@ -221,8 +248,11 @@ class _SwipePageState extends State<SwipePage> {
                         children: [
                           // Image
                           Positioned.fill(
-                            child: (photoUrl != null && photoUrl.isNotEmpty)
-                                ? Image.network(photoUrl, fit: BoxFit.cover)
+                            child: _safeImageProvider(photoUrl) != null
+                                ? Image(
+                                    image: _safeImageProvider(photoUrl)!,
+                                    fit: BoxFit.cover,
+                                  )
                                 : Container(
                                     color: Colors.grey[300],
                                     child: Icon(
@@ -264,14 +294,14 @@ class _SwipePageState extends State<SwipePage> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      // Display the Local Score Tag
+                                      // Local Score Tag
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
                                           vertical: 5,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.red[800],
+                                          color: Colors.yellow[800],
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),

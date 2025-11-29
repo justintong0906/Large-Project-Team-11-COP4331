@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 import 'Login_Page.dart';
 import '../services/api_config.dart';
 
@@ -21,6 +23,18 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _majorController;
   late TextEditingController _bioController;
   late TextEditingController _expController;
+  late TextEditingController _phoneController;
+
+  // Avatar State (Base64 String)
+  String? _selectedAvatarBase64;
+
+  // Asset Avatars (Must match pubspec.yaml)
+  final List<String> _avatarAssets = [
+    'assets/avatars/avatar1.jpeg',
+    'assets/avatars/avatar2.jpeg',
+    'assets/avatars/avatar3.png',
+    'assets/avatars/avatar4.jpeg',
+  ];
 
   // 2. Quiz State (Selections)
   final Set<String> _selectedDays = {};
@@ -29,8 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   bool _isLoading = false;
 
-  // --- 3. FIXED BITMAPS (MUST MATCH YOUR BACKEND EXACTLY) ---
-  // Backend: DAY_BITS = { sun: 0, mon: 1, ... sat: 6 }
+  // --- BITMAPS ---
   final Map<String, int> _dayBits = {
     'sun': 0,
     'mon': 1,
@@ -40,22 +53,18 @@ class _ProfilePageState extends State<ProfilePage> {
     'fri': 5,
     'sat': 6,
   };
-
-  // Backend: TIME_BITS = { morning: 7, afternoon: 8, evening: 9 }
   final Map<String, int> _timeBits = {
     'morning': 7,
     'afternoon': 8,
     'evening': 9,
   };
-
-  // Backend: SPLIT_BITS = { arnold: 10, ppl: 11, brosplit: 12 }
   final Map<String, int> _splitBits = {'arnold': 10, 'ppl': 11, 'brosplit': 12};
 
   @override
   void initState() {
     super.initState();
     _initializeFields();
-    _decodeBitmask(); // This triggers the highlighting
+    _decodeBitmask();
   }
 
   void _initializeFields() {
@@ -75,16 +84,103 @@ class _ProfilePageState extends State<ProfilePage> {
     _expController = TextEditingController(
       text: (profile['yearsOfExperience'] ?? '').toString(),
     );
+    _phoneController = TextEditingController(text: profile['phone'] ?? '');
+
+    // Load existing avatar if present
+    if (profile['photo'] != null && profile['photo'].toString().isNotEmpty) {
+      _selectedAvatarBase64 = profile['photo'];
+    }
   }
 
-  // --- 4. DECODE LOGIC (Highlights the buttons) ---
+  // --- Helper: Safe Image Decoder ---
+  ImageProvider? _safeImageProvider(String? base64String) {
+    if (base64String == null || base64String.isEmpty) {
+      return null;
+    }
+
+    try {
+      // Clean string
+      String cleanString = base64String.contains(',')
+          ? base64String.split(',').last
+          : base64String;
+      cleanString = cleanString.replaceAll(RegExp(r'\s+'), '');
+
+      final Uint8List bytes = base64Decode(cleanString);
+      if (bytes.isEmpty) return null;
+
+      return MemoryImage(bytes);
+    } catch (e) {
+      print("⚠️ Image Error: $e");
+      return null;
+    }
+  }
+
+  // --- Helper: Select Avatar Modal ---
+  Future<void> _selectAvatar() async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return Container(
+          height: 300,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const Text(
+                "Choose an Avatar",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: _avatarAssets.length,
+                  itemBuilder: (ctx, index) {
+                    return GestureDetector(
+                      onTap: () async {
+                        try {
+                          final String assetPath = _avatarAssets[index];
+                          final ByteData bytes = await rootBundle.load(
+                            assetPath,
+                          );
+                          final Uint8List list = bytes.buffer.asUint8List();
+                          // Standardize format
+                          final String base64Image =
+                              "data:image/png;base64,${base64Encode(list)}";
+
+                          setState(() {
+                            _selectedAvatarBase64 = base64Image;
+                          });
+                          if (mounted) Navigator.pop(ctx);
+                        } catch (e) {
+                          print("Error loading asset: $e");
+                        }
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Image.asset(_avatarAssets[index]),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _decodeBitmask() {
     int mask = widget.userData['questionnaireBitmask'] ?? 0;
-
-    // Helper to check bits
     void checkAndAdd(Map<String, int> map, Set<String> set) {
       map.forEach((key, bitIndex) {
-        // If the bit at bitIndex is 1 (on), add it to our selection set
         if ((mask & (1 << bitIndex)) != 0) {
           set.add(key);
         }
@@ -107,16 +203,25 @@ class _ProfilePageState extends State<ProfilePage> {
     _majorController.dispose();
     _bioController.dispose();
     _expController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
-  // --- 5. API CALL TO UPDATE ---
+  // --- API CALL TO UPDATE ---
   Future<void> _updateProfile() async {
     setState(() => _isLoading = true);
 
-    // FIX: Use ID in URL instead of '/profile' to match standard REST patterns
-    final String apiUrl =
-        '${ApiConfig.baseUrl}/api/users/${widget.userData['_id']}';
+    // Validate ID
+    final String userId = widget.userData['_id'] ?? widget.userData['id'] ?? '';
+    if (userId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error: Missing User ID')));
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final String apiUrl = '${ApiConfig.baseUrl}/api/users/$userId/quiz';
 
     try {
       final response = await http.put(
@@ -126,12 +231,9 @@ class _ProfilePageState extends State<ProfilePage> {
           'Authorization': 'Bearer ${widget.userData['token']}',
         },
         body: jsonEncode({
-          // 1. Send Arrays (Backend will recalculate the bitmask from these)
           'days': _selectedDays.toList(),
           'times': _selectedTimes.toList(),
           'splits': _selectedSplits.toList(),
-
-          // 2. Send Profile Data
           'profile': {
             'username': _usernameController.text.trim(),
             'email': _emailController.text.trim(),
@@ -140,6 +242,9 @@ class _ProfilePageState extends State<ProfilePage> {
             'major': _majorController.text.trim(),
             'bio': _bioController.text.trim(),
             'yearsOfExperience': int.tryParse(_expController.text.trim()),
+            'phone': _phoneController.text.trim(),
+            // Send the Base64 string directly
+            if (_selectedAvatarBase64 != null) 'photo': _selectedAvatarBase64,
           },
         }),
       );
@@ -148,17 +253,16 @@ class _ProfilePageState extends State<ProfilePage> {
         final data = jsonDecode(response.body);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile & Preferences saved!')),
+          const SnackBar(content: Text('Profile saved successfully!')),
         );
 
-        // Update Local Data so UI reflects changes immediately
+        // Update Local Data
         setState(() {
-          // The backend returns the new bitmask, so we save it locally
           widget.userData['questionnaireBitmask'] =
               data['questionnaireBitmask'];
-
           if (widget.userData['profile'] == null)
             widget.userData['profile'] = {};
+
           widget.userData['profile']['bio'] = _bioController.text.trim();
           widget.userData['profile']['major'] = _majorController.text.trim();
           widget.userData['profile']['age'] = int.tryParse(
@@ -168,17 +272,28 @@ class _ProfilePageState extends State<ProfilePage> {
           widget.userData['profile']['yearsOfExperience'] = int.tryParse(
             _expController.text.trim(),
           );
+          widget.userData['profile']['phone'] = _phoneController.text.trim();
+
+          if (_selectedAvatarBase64 != null) {
+            widget.userData['profile']['photo'] = _selectedAvatarBase64;
+          }
         });
       } else {
-        print("Server Error: ${response.body}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${response.statusCode}')),
-        );
+        try {
+          final errorData = jsonDecode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Save failed: ${errorData['message']}')),
+          );
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Save failed: ${response.statusCode}')),
+          );
+        }
       }
     } catch (e) {
-      print(e);
+      print("Profile Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not connect to the server.')),
+        const SnackBar(content: Text('Connection Error. Check console.')),
       );
     }
     setState(() => _isLoading = false);
@@ -190,7 +305,9 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("My Profile", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.red[800],
+        backgroundColor: Colors.yellow[800],
+        centerTitle: true,
+        automaticallyImplyLeading: false,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
@@ -210,6 +327,34 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- PHOTO SECTION ---
+            Center(
+              child: GestureDetector(
+                onTap: _selectAvatar,
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundColor: Colors.grey[200],
+                  // Use Safe Decoder
+                  backgroundImage: _safeImageProvider(_selectedAvatarBase64),
+                  child: _selectedAvatarBase64 == null
+                      ? Icon(
+                          Icons.add_a_photo,
+                          size: 40,
+                          color: Colors.grey[400],
+                        )
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Center(
+              child: Text(
+                "Tap to change avatar",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            const SizedBox(height: 20),
+
             const Text(
               "Personal Details",
               style: TextStyle(
@@ -242,6 +387,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
+
+            _buildTextField(
+              _phoneController,
+              "Phone Number",
+              Icons.phone,
+              keyboardType: TextInputType.phone,
+            ),
             _buildTextField(_majorController, "Major", Icons.school),
             _buildTextField(
               _expController,
@@ -263,13 +415,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.black,
               ),
             ),
-            const Text(
-              "Update these to change who you match with.",
-              style: TextStyle(color: Colors.grey),
-            ),
             const SizedBox(height: 20),
 
-            // Pass the CORRECT maps here
             _buildChipSection("Days Available", _dayBits, _selectedDays),
             _buildChipSection("Preferred Times", _timeBits, _selectedTimes),
             _buildChipSection("Workout Split", _splitBits, _selectedSplits),
@@ -281,7 +428,7 @@ class _ProfilePageState extends State<ProfilePage> {
               height: 55,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[800],
+                  backgroundColor: Colors.yellow[800],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -307,7 +454,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // --- Helper: Text Field ---
   Widget _buildTextField(
     TextEditingController controller,
     String label,
@@ -323,7 +469,7 @@ class _ProfilePageState extends State<ProfilePage> {
         maxLines: maxLines,
         style: const TextStyle(color: Colors.black),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.red[800]),
+          prefixIcon: Icon(icon, color: Colors.yellow[800]),
           labelText: label,
           labelStyle: TextStyle(color: Colors.grey[600]),
           filled: true,
@@ -332,16 +478,11 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red[800]!, width: 2),
-          ),
         ),
       ),
     );
   }
 
-  // --- Helper: Chip Section ---
   Widget _buildChipSection(
     String title,
     Map<String, int> options,
@@ -357,7 +498,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.red[800],
+              color: Colors.yellow[800],
             ),
           ),
         ),
@@ -366,32 +507,29 @@ class _ProfilePageState extends State<ProfilePage> {
           runSpacing: 8,
           children: options.keys.map((key) {
             final isSelected = selectedSet.contains(key);
-            // Simple capitalization for display
             final displayLabel = "${key[0].toUpperCase()}${key.substring(1)}";
-
             return FilterChip(
               label: Text(displayLabel),
               selected: isSelected,
-              selectedColor: Colors.red[100],
-              checkmarkColor: Colors.red[800],
+              selectedColor: Colors.yellow[100],
+              checkmarkColor: Colors.yellow[800],
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected ? Colors.red[800]! : Colors.grey[300]!,
+                  color: isSelected ? Colors.yellow[800]! : Colors.grey[300]!,
                 ),
               ),
               labelStyle: TextStyle(
-                color: isSelected ? Colors.red[900] : Colors.black87,
+                color: isSelected ? Colors.yellow[900] : Colors.black87,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               onSelected: (bool selected) {
                 setState(() {
-                  if (selected) {
+                  if (selected)
                     selectedSet.add(key);
-                  } else {
+                  else
                     selectedSet.remove(key);
-                  }
                 });
               },
             );
