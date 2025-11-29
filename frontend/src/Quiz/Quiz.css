@@ -115,7 +115,6 @@ textarea.textbox{
 
 .radioGroup{
     margin: 0 20px 20px 20px;
-    display: flex;
     gap: 10px;
 }
 
