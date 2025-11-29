@@ -15,7 +15,7 @@ function CenterTab() {
 				<Route path="/" element={<Home />} />
 				<Route path="/friends" element={<Friends />} />
         		<Route path="/friends/:id" element={<FriendProfile />} />
-				<Route path="/profile" element={<Profile />} />
+				<Route path="/profile/*" element={<Profile />} />
 			</Routes>
 		</div>
 

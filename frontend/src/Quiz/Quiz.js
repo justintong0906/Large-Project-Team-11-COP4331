@@ -223,8 +223,8 @@ function Quiz(){
                     <label for="any">Any</label>
                 </div>
                 
-                {error && <p style={{color:"red", textAlign:"center"}}>{error}</p>}       
-                {success && <p style={{color:"green", textAlign:"center"}}>{success}</p>}                         
+                {error && <p style={{color:"red", textAlign:"center"}}>{error}</p>}
+                {success && <p style={{color:"green", textAlign:"center"}}>{success}</p>}
                 <button class="Center ButtonSubmit" onClick={handleSubmit}>Submit</button>
             </div>
         </div>
