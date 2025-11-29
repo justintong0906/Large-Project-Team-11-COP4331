@@ -55,7 +55,6 @@ function ProfileDisplay() {
   const p = u.profile || {};
   const q = decodeBitmask(u.questionnaireBitmask) || {};
 
-  // added: ordered lists and safe defaults
   const DAYS_ORDER = ["Su","Mo","Tu","We","Th","Fr","Sa"];
   const TIMES_ORDER = ["Morning","Afternoon","Evening"];
   const days = Array.isArray(q.days) ? q.days : [];

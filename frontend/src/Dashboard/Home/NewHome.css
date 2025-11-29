@@ -1,0 +1,215 @@
+.Home{
+    position: flex;
+    display: flex;
+    font-family: Arial;
+    font-size: large;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+/* everything below this is duplicate from ProfileDisply.css */
+/* modifying these could affect the others */
+
+.bubble, .activeBubble, .inactiveBubble, .permBubble{
+    padding: 4px 7px;
+    border-radius: 15px;
+    margin: 0 2px;
+}
+.permBubble{
+    background-color:violet;
+}
+.activeBubble{
+    background-color:lightskyblue;
+}
+.inactiveBubble{
+    color: rgb(150, 150, 150);
+    background-color:rgb(225, 225, 225);
+}
+
+.profilePhoto{
+    position: relative;
+    object-fit: contain;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+}
+.imageOverlay{
+    position: absolute;
+    object-fit: contain;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    opacity: 0;
+
+    left:0%;   
+    z-index: 1;
+    transition: opacity 0.2s ease-in-out;
+}
+.images:hover .imageOverlay {
+    opacity: 0.25;
+}
+
+.userDetails{
+    position: relative;
+    left: 5%;
+}
+
+.backButton{
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color:black;
+}
+
+.editButton{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color:black;
+}
+.editSuccess{
+    position: absolute;
+    top: 40px;
+    right: 16px;
+    color:rgb(112, 184, 112)
+}
+.editError{
+    position: absolute;
+    top: 40px;
+    right: 16px;
+    color:rgb(229, 90, 90)
+}
+
+.bottomText{
+    font-size:large;
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: black;
+    padding: 4px 8px;
+    border-radius: 5px;
+    background-color: lightgrey;
+}
+.bottomTextEdit{
+    font-size:large;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: black;
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.bioBox{
+    margin-top: -10px;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: lightgrey;
+}
+
+.editInput{ /*type-box, i got this style from "copy-paste-css.com" */
+    padding: 6px 12px;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #9c9c9c;
+    appearance: none;
+    border-radius: 4px;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+
+    :focus{
+        color: #212529;
+        background-color: #fff;
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+    }
+
+    width: 50%;
+}
+textarea.editInput{
+    font-family: "Arial";
+    resize: none;
+    width:100%
+}
+
+.eiSmall{
+    width: 28%;
+}
+
+.editLabel{
+    margin-right: 5px;
+}
+label.editLabel{ /*fixes spacing issue of label type*/
+    display:inline-block
+}
+
+
+
+.radioGroupEdit{
+    /* margin: 0 20px 20px 20px;
+    display: flex;
+    gap: 10px; */
+}
+
+.radioGroupEdit input[type="radio"],
+.radioGroupEdit input[type="checkbox"]{ /*keep styling for multi-select*/
+    display: none;
+}
+
+.radioGroupEdit label{
+    padding: 4px 7px;
+    border-radius: 15px;
+    margin: 0 2px;
+    
+    cursor: pointer;
+    color: rgb(150, 150, 150);
+    background-color:rgb(225, 225, 225);
+}
+
+.radioGroupEdit label:hover{
+    transition: 0.3s;
+    background-color: rgba(135, 206, 250, 0.3);
+}
+
+.radioGroupEdit input[type="radio"]:checked + label,
+.radioGroupEdit input[type="checkbox"]:checked + label{
+    background-color: lightskyblue;
+    color:black
+}
+
+.RGEperm label:hover{
+    transition: 0.3s;
+    background-color: rgba(238, 130, 238, 0.3)
+}
+.RGEperm input[type="radio"]:checked + label,
+.RGEperm input[type="checkbox"]:checked + label{
+    background-color: violet;
+    color:black
+}
+
+.xButton, .checkButton{
+    cursor:pointer;
+    position:absolute;
+    height:75px;
+    width: 75px;
+    border-radius: 50%;
+    bottom:15px;
+}
