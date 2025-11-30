@@ -99,7 +99,7 @@ function ProfileEdit() {
         const major = document.getElementById("major").value || "N/A";
         const yearsOfExperience = document.getElementById("yearsOfExperience").value || "N/A";
 
-        const genderPreference = document.getElementById("workoutWith").value;
+        const genderPreferences = document.getElementById("workoutWith").value;
         const days = Array.from(document.querySelectorAll('input[name="workoutDays"]:checked')).map(input => input.value);
         const times = Array.from(document.querySelectorAll('input[name="workoutTime"]:checked')).map(input => input.value);
         let splits = Array.from(document.querySelectorAll('input[name="workoutSplit"]:checked')).map(input => input.value);
@@ -110,8 +110,8 @@ function ProfileEdit() {
         }
 
             //if missing required * fields
-        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0 || phone==''){
-            console.log(genderPreference)
+        if(name=='' || gender=='' || genderPreferences.length===0 || days.length===0 || times.length===0 || splits.length===0 || phone==''){
+            console.log(genderPreferences)
             setError("Please fill out required fields.");
             setSuccess("");
         }
@@ -128,7 +128,7 @@ function ProfileEdit() {
                         age: age ? Number(age) : undefined,
                         major,
                         yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
-                        genderPreference,
+                        genderPreferences,
                     },
                     days,   //
                     times,  //

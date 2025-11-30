@@ -98,7 +98,7 @@ function Quiz(){
         const major = document.getElementById("major").value;
         const yearsOfExperience = document.getElementById("yearsOfExperience").value;
 
-        const genderPreference = Array.from(document.querySelectorAll('input[name="workoutWith"]:checked')).map(input => input.value);
+        const genderPreferences = Array.from(document.querySelectorAll('input[name="workoutWith"]:checked')).map(input => input.value);
         const days = Array.from(document.querySelectorAll('input[name="workoutDays"]:checked')).map(input => input.value);
         const times = Array.from(document.querySelectorAll('input[name="workoutTime"]:checked')).map(input => input.value);
         let splits = Array.from(document.querySelectorAll('input[name="workoutSplit"]:checked')).map(input => input.value);
@@ -110,7 +110,7 @@ function Quiz(){
         }
 
             //if missing required * fields
-        if(name=='' || gender=='' || genderPreference.length===0 || days.length===0 || times.length===0 || splits.length===0 || phone ==0){
+        if(name=='' || gender=='' || genderPreferences.length===0 || days.length===0 || times.length===0 || splits.length===0 || phone ==0){
             setError("Please fill out required fields indicated by *");
         }
             //send info
@@ -126,7 +126,7 @@ function Quiz(){
                         age: age ? Number(age) : undefined,
                         major,
                         yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
-                        genderPreference,
+                        genderPreferences,
                     },
                     days,   //
                     times,  //
