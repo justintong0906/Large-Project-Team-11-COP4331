@@ -65,7 +65,7 @@ export const getRandomCompatibleUser = async (req, res) => {
     }
 
     // Load only what we need
-    const me = await User.findById(meId).select("questionnaireBitmask").lean();
+    const me = await User.findById(meId).select("questionnaireBitmask profile.gender profile.genderPreferences").lean();
     if (!me) return res.status(404).json({ message: "Current user not found" });
 
     const myMask = me.questionnaireBitmask ?? 0;
@@ -94,16 +94,25 @@ export const getRandomCompatibleUser = async (req, res) => {
     // 1) excludes the current user
     // 2) requires sharing at least one bit with the caller in each group
     // 3) samples a random compatible user
+
+    //match filter: default is just bitmask
+    const matchingFilter = {
+      _id: { $ne: new mongoose.Types.ObjectId(meId) },
+      $and: [
+        { questionnaireBitmask: { $bitsAnySet: myA } },
+        { questionnaireBitmask: { $bitsAnySet: myB } },
+        { questionnaireBitmask: { $bitsAnySet: myC } },
+      ],
+    };
+
+    // If user wants "single_gender", also filter by their gender
+    if (me.profile?.genderPreferences === "single_gender") {
+        matchingFilter["profile.gender"] = me.profile?.gender; 
+    }
+
     const [user] = await User.aggregate([
       {
-        $match: {
-          _id: { $ne: new mongoose.Types.ObjectId(meId) },
-          $and: [
-            { questionnaireBitmask: { $bitsAnySet: myA } }, // share a bit in 0–6
-            { questionnaireBitmask: { $bitsAnySet: myB } }, // share a bit in 7–9
-            { questionnaireBitmask: { $bitsAnySet: myC } }, // share a bit in 10–12
-          ],
-        },
+        $match: matchingFilter,
       },
       { $sample: { size: 1 } },
       {

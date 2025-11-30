@@ -8,7 +8,9 @@ const API_BASE = process.env.REACT_APP_API_BASE;
 
 function NewHome() {
     const [user, setUser] = useState(null);
+
     const [lastUsername, setLastUsername] = useState("");
+    const [pendingMatches, setPendingMatches] = useState([])
 
     const [error, setError] = useState(null);
     const [reject, setReject] = useState("");
@@ -19,12 +21,35 @@ function NewHome() {
     const acceptText = "Accepting user...";
 
     useEffect(() => {
+        // 1. make sure feteches only once
         // If already fetched, stop here.
         if (hasFetchedRef.current){
             return;
         }
         // Mark as fetched
         hasFetchedRef.current = true;
+
+
+        // 2. fetch /me to get the pendingMatches list
+        const token = localStorage.getItem("token");
+        fetch(`${API_BASE}/users/me`, {
+            headers: { 
+                Authorization: `Bearer ${token}` 
+            },
+        })
+        .then(r => r.json().then(body => ({ 
+            ok: r.ok, 
+            body 
+        })))
+        .then(({ ok, body }) => {
+            if (!ok) 
+                throw new Error(body?.message || "Failed to load");
+            setPendingMatches(body.pendingMatches);
+        })
+        .catch(e => setError(e.message || "Error"))
+
+
+        // 3. show random
         showRandom();
     }, []);
 
@@ -50,7 +75,12 @@ function NewHome() {
 
                 // reroll if they were just shown
                 if(body.username == lastUsername){
-                    console.log("REROLLING: ", body.username, lastUsername);
+                    console.log("REROLLING (just shown): ", body.username);
+                    showRandom();
+                    return;
+                }
+                if(pendingMatches.includes(body._id)){
+                    console.log("REROLLING (already pending): ", body.username);
                     showRandom();
                     return;
                 }
@@ -103,7 +133,8 @@ function NewHome() {
                 body: JSON.stringify({}) //the matchId is from the api link parameter, so no need to send any json.
 			})
 			.then(response => {
-				console.log("Match response:", response);
+				console.log("Match response:", response.message);
+                pendingMatches.push(matchId);
 			})
 			.catch(error => {
 				console.error("Match error:", error);
