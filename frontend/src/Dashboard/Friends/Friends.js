@@ -23,6 +23,8 @@ const API_BASE = process.env.REACT_APP_API_BASE;
 function Friends() {
     //get current profile friends
     const [friends, setFriends] = useState([]);
+    const [message, setMessage] = useState("Loading Friends...");
+
     useEffect(() => {
         const fetchFriends = async () => {
             const token = localStorage.getItem("token");
@@ -30,7 +32,12 @@ function Friends() {
                 headers: {"Authorization": `Bearer ${token}`}
             });
             const data = await res.json();
-            if (res.ok) setFriends(data.friends);
+            if (res.ok){
+                setFriends(data.friends);
+                if (data.friends.length === 0){
+                    setMessage("No friends found. Match on Home page to find new friends!");
+                }
+            }
         };
         fetchFriends();
     }, []);
@@ -38,7 +45,7 @@ function Friends() {
     return (
         <div className="FriendsTab Grid">
             {friends.length === 0 ? (
-                <div>No friends found</div>
+                <div>{message}</div>
             ) : (
                 friends.map(friend => (
                 <Link

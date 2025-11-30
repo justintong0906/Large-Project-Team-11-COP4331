@@ -317,7 +317,16 @@ export const SendMatch = async (req, res) => {
     // CASE 1: target already requested caller → MATCH!
     // ------------------------------------------
     const targetPending = target.pendingMatches.map(String);
-    if (targetPending.includes(callerId)) {
+
+    // console.log(targetPending);
+    // console.log(callerId);
+    // console.log(targetId);
+    const StringCallerId = String(callerId);
+    const StringTargetId = String(targetId);
+    // console.log(callerId);
+    // console.log(targetId);
+    if (targetPending.includes(StringCallerId)) {
+      // console.log("in if statement");
 
       // Add each other to `friends` sets (no duplicates)
       caller.friends.addToSet(targetId);
@@ -325,7 +334,12 @@ export const SendMatch = async (req, res) => {
 
       // Remove target→caller pending request
       target.pendingMatches = target.pendingMatches.filter(
-        (id) => id.toString() !== callerId
+        (id) => id.toString() !== StringCallerId
+      );
+
+      // Remove caller->target pending request
+      caller.pendingMatches = caller.pendingMatches.filter(
+        (id) => id.toString() !== StringTargetId
       );
 
       await caller.save();
@@ -341,7 +355,7 @@ export const SendMatch = async (req, res) => {
     // CASE 2: caller already sent a request before
     // ------------------------------------------
     const callerPending = caller.pendingMatches.map(String);
-    if (callerPending.includes(targetId)) {
+    if (callerPending.includes(StringTargetId)) {
       return res.json({
         message: "Match request already sent.",
         pendingTo: targetId

@@ -213,3 +213,18 @@ label.editLabel{ /*fixes spacing issue of label type*/
     border-radius: 50%;
     bottom:15px;
 }
+
+.overlay-dim {
+    position: fixed;
+    inset: 0; 
+    z-index: 10;
+
+    background: rgba(30, 59, 32, 0.75);
+    color: white;
+
+    display: grid;
+    place-items: center;
+
+    font-size: 32px;
+    font-weight: bold;
+}

@@ -11,14 +11,17 @@ function NewHome() {
 
     const [lastUsername, setLastUsername] = useState("");
     const [pendingMatches, setPendingMatches] = useState([])
+    const [friendsList, setFriendsList] = useState([])
 
     const [error, setError] = useState(null);
     const [reject, setReject] = useState("");
     const [accept, setAccept] = useState("");
+    const [overlay, setOverlay] = useState(false);
 
     const hasFetchedRef = useRef(false);
     const rejectText = "Rejecting user...";
     const acceptText = "Accepting user...";
+    const matchMessageText = "It's a match! Check Friends page.";
 
     useEffect(() => {
         // 1. make sure feteches only once
@@ -30,7 +33,7 @@ function NewHome() {
         hasFetchedRef.current = true;
 
 
-        // 2. fetch /me to get the pendingMatches list
+        // 2. fetch /me to get the friends and pendingMatches list
         const token = localStorage.getItem("token");
         fetch(`${API_BASE}/users/me`, {
             headers: { 
@@ -45,6 +48,7 @@ function NewHome() {
             if (!ok) 
                 throw new Error(body?.message || "Failed to load");
             setPendingMatches(body.pendingMatches);
+            setFriendsList(body.friends);
         })
         .catch(e => setError(e.message || "Error"))
 
@@ -71,7 +75,6 @@ function NewHome() {
             .then(({ ok, body }) => {
                 if (!ok)
                     throw new Error(body?.message || "Failed to load");
-                setUser(body);
 
                 // reroll if they were just shown
                 if(body.username == lastUsername){
@@ -84,6 +87,13 @@ function NewHome() {
                     showRandom();
                     return;
                 }
+                if(friendsList.includes(body._id)){
+                    console.log("REROLLING (already friends): ", body.username);
+                    showRandom();
+                    return;
+                }
+
+                setUser(body);
                 
                 setLastUsername(body.username);
                 setAccept("");
@@ -132,20 +142,32 @@ function NewHome() {
 				},
                 body: JSON.stringify({}) //the matchId is from the api link parameter, so no need to send any json.
 			})
-			.then(response => {
-				console.log("Match response:", response.message);
+            .then(res => res.json())
+			.then(data => {
+				console.log("Match response:", data.message);
                 pendingMatches.push(matchId);
+
+                if(data.message == "It's a match!"){
+                    setOverlay(true);
+                    friendsList.push(matchId);
+                    setTimeout(() => {
+                        setOverlay(false);
+                        showRandom();// 
+                    }, 3000);
+                }
+                else{
+                    showRandom();//
+                }
 			})
 			.catch(error => {
 				console.error("Match error:", error);
 				console.error("- Selected User Data was: ", user)
+                showRandom();// 
 			});
 		}
         else{
             setError("Error: user/match unidentified.")
         }
-
-        showRandom();
 	};
 
     const rejectUser = () => {
@@ -181,6 +203,13 @@ function NewHome() {
     // --- return --- //
     return (
         <div className="Home">
+
+            {/* overlay for match found */}
+            {overlay && (
+                <div className="overlay-dim">
+                    {matchMessageText}
+                </div>
+            )}
             {/* LEFT COLUMN */}
             <div style={{ "width": "50%" }}>
                 <center>
