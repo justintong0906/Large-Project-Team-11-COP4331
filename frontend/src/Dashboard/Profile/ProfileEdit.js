@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"
 import "./Profile.css"
+import { compressImage } from "../../utils.js";
+
 import pencil from '../../images/pencil.png';
 
 const API_BASE = process.env.REACT_APP_API_BASE;
@@ -59,21 +61,27 @@ function ProfileEdit() {
         }
     }, [user]);
 
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
+            // const MAX_SIZE = 2 * 1024 * 1024; 
+            // if (file.size > MAX_SIZE) {
+            //     setSuccess("")
+            //     setError("File is too large! Please select an image under 2MB.");
+            //     return;
+            // }
 
-        const MAX_SIZE = 2 * 1024 * 1024; 
-        if (file.size > MAX_SIZE) {
-            setSuccess("")
-            setError("File is too large! Please select an image under 2MB.");
-            return;
-        }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImageBase64(reader.result);
-            };
-            reader.readAsDataURL(file);
+            //image compression
+            try {
+                console.log(`Original size: ${(file.size / 1024).toFixed(2)} KB`);
+                const compressedBase64 = await compressImage(file);
+
+                const sizeInBytes = 4 * Math.ceil((compressedBase64.length / 3)) * 0.5624896334383812;
+                console.log(`Compressed size: ${(sizeInBytes / 1024).toFixed(2)} KB`);
+                setImageBase64(compressedBase64);
+            } catch (error) {
+                console.error("Compression failed:", error);
+            }
         }
     };
 
@@ -147,7 +155,7 @@ function ProfileEdit() {
                     // Redirect to dashboard after a short delay to show success message
                     setTimeout(() => {
                         navigate("/profile");
-                    }, 2000);
+                    }, 1000);
                 } else {
                     setSuccess("");
                     setError(data.message || "Failed to save edit");

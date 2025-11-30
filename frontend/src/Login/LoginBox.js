@@ -23,6 +23,7 @@ function LoginBox({setView}){
 
     const handleLogin = async () => {
         console.log("Login button clicked");
+        setSuccess("Logging in...");
         const identifier = document.getElementById("IdentifierInput").value;
         const password = document.getElementById("PasswordInput").value;
         
@@ -82,6 +83,7 @@ function SignupBox({setView}){
     const [success, setSuccess] = useState("");
     
     const handleSignup = async () => {
+        setSuccess("Signing Up...");
         const email = document.getElementById("EmailInput").value;
         const username = document.getElementById("UsernameInput").value;
         const password = document.getElementById("SignupPasswordInput").value;
@@ -137,6 +139,7 @@ function ForgotPassword({setView}){
     const [error, setError] = useState("");
 
     const handleForgot = async () => {
+        setMessage("Sending email...");
         const email = document.getElementById("ForgotEmailInput").value;
         const res = await fetch(`${API_BASE}/auth/forgot-password`, {
             method: "POST",

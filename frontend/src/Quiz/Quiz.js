@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import "./Quiz.css"
 
+import { compressImage } from "../utils";
+
 import { useNavigate } from "react-router-dom"
 import { DEFAULT_PFP } from "./default-pfp-b64";
 
@@ -45,22 +47,27 @@ function Quiz(){
     // changing pfp
     const [imageBase64, setImageBase64] = useState(DEFAULT_PFP);
     
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const MAX_SIZE = 2 * 1024 * 1024; 
+            // const MAX_SIZE = 2 * 1024 * 1024; 
+            // if (file.size > MAX_SIZE) {
+            //     setSuccess("")
+            //     setError("File is too large! Please select an image under 2MB.");
+            //     return;
+            // }
 
-            if (file.size > MAX_SIZE) {
-                setSuccess("")
-                setError("File is too large! Please select an image under 2MB.");
-                return;
+            //image compression
+            try {
+                console.log(`Original size: ${(file.size / 1024).toFixed(2)} KB`);
+                const compressedBase64 = await compressImage(file);
+
+                const sizeInBytes = 4 * Math.ceil((compressedBase64.length / 3)) * 0.5624896334383812;
+                console.log(`Compressed size: ${(sizeInBytes / 1024).toFixed(2)} KB`);
+                setImageBase64(compressedBase64);
+            } catch (error) {
+                console.error("Compression failed:", error);
             }
-
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImageBase64(reader.result);
-            };
-            reader.readAsDataURL(file);
         }
     };
 
@@ -81,7 +88,7 @@ function Quiz(){
         navigate("/login");
     };
     const handleSubmit = async () => {
-        console.log("got here")
+        console.log("Submitting...")
         const photo = imageBase64;
         const name = document.getElementById("name").value;
         const bio = document.getElementById("bio").value;
@@ -144,7 +151,7 @@ function Quiz(){
                     // Redirect to dashboard after a short delay to show success message
                     setTimeout(() => {
                         navigate("/");
-                    }, 2000);
+                    }, 1000);
                 } else {
                     setError(data.message || "Failed to save quiz");
                 }
