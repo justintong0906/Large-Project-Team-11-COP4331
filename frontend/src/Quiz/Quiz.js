@@ -98,7 +98,10 @@ function Quiz(){
         const major = document.getElementById("major").value;
         const yearsOfExperience = document.getElementById("yearsOfExperience").value;
 
-        const genderPreferences = Array.from(document.querySelectorAll('input[name="workoutWith"]:checked')).map(input => input.value);
+        let genderPreferences = Array.from(document.querySelectorAll('input[name="workoutWith"]:checked')).map(input => input.value);
+        if (Array.isArray(genderPreferences)) {
+            genderPreferences = genderPreferences[0];
+        }
         const days = Array.from(document.querySelectorAll('input[name="workoutDays"]:checked')).map(input => input.value);
         const times = Array.from(document.querySelectorAll('input[name="workoutTime"]:checked')).map(input => input.value);
         let splits = Array.from(document.querySelectorAll('input[name="workoutSplit"]:checked')).map(input => input.value);
