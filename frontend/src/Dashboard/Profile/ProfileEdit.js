@@ -266,7 +266,8 @@ function ProfileEdit() {
                 {/* a divider line */}
                 <div style={{ "height": "2px", "left": "5%", "top": "30%", "right": "5%", "backgroundColor": "#D7D7D7", margin: "10px 0" }} />
                 
-                <label >Years of Gym Experience</label> <input id="yearsOfExperience" class="editInput eiSmall" defaultValue={p.yearsOfExperience}></input> Years
+                {/* years of experience */}
+                <label >Years of Gym Experience</label> <input aria-label="genderPreferences" id="yearsOfExperience" class="editInput eiSmall" defaultValue={p.yearsOfExperience}></input> Years
                 
                 {/* Workout splits: render checkboxes, pre-checked based on splits array */}
                 <p>Workout Split(s)*</p>
@@ -312,7 +313,7 @@ function ProfileEdit() {
                 <label class="editLabel">
                     Gender Workout Preference*
                 </label>
-                <select id="workoutWith" class="editInput" defaultValue={p.genderPreferences}>
+                <select aria-label="genderPreferences" id="workoutWith" class="editInput" defaultValue={p.genderPreferences}>
                     <option value="">(Select Gender)</option>
                     <option value="single_gender">Single Gender</option>
                     <option value="no_preference">Any Gender</option>

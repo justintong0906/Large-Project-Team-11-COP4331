@@ -19,8 +19,8 @@
     background-color:lightskyblue;
 }
 .inactiveBubble{
-    color: rgb(150, 150, 150);
-    background-color:rgb(225, 225, 225);
+    color: rgb(60, 60, 60);
+    background-color:rgb(197, 197, 197);
 }
 
 .profilePhoto{
@@ -177,8 +177,8 @@ label.editLabel{ /*fixes spacing issue of label type*/
     margin: 0 2px;
     
     cursor: pointer;
-    color: rgb(150, 150, 150);
-    background-color:rgb(225, 225, 225);
+    color: rgb(60, 60, 60);
+    background-color:rgb(197, 197, 197);
 }
 
 .radioGroupEdit label:hover{

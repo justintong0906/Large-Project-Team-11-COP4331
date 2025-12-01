@@ -277,7 +277,7 @@ function NewHome() {
             </div>
 
             {/* Bottom-center text */}
-            <p className="bottomText">Phone Number: {p.phone}</p>
+            {/* <p className="bottomText">Phone Number: {p.phone}</p> */}
 
             {/* Reject and Accept */}
             <img 

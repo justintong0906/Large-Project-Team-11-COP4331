@@ -24,6 +24,7 @@ function LoginBox({setView}){
     const handleLogin = async () => {
         console.log("Login button clicked");
         setSuccess("Logging in...");
+        setError("");
         const identifier = document.getElementById("IdentifierInput").value;
         const password = document.getElementById("PasswordInput").value;
         
